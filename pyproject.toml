@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "oatse"
+version = "0.1.0"
+description = "OATSE: Ocean Acoustic Thermocline & Sonar Engine - Standalone 3D/4D underwater acoustics, thermocline ray-refraction, and seabed SAS impedance inversion workstation powered by machine-checked OcclusionTriad.lean mathematical physics"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "CC0-1.0" }
+dependencies = [
+    "torch>=2.1.0",
+    "numpy>=1.24.0",
+    "scipy>=1.10.0",
+    "matplotlib>=3.7.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+]
+
+[project.scripts]
+oatse = "oatse.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/sneed-and-feed/oatse"
+Repository = "https://github.com/sneed-and-feed/oatse"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["oatse*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]

@@ -1,0 +1,111 @@
+name: OATSE Cross-Platform CI & Pre-Packaged Release
+
+on:
+  push:
+    branches: ["main", "master"]
+    tags: ["v*"]
+  pull_request:
+    branches: ["main", "master"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  test-matrix:
+    name: Pytest, Math Audit & Peak Heap (${{ matrix.os }}, Py${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.11", "3.12"]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip setuptools wheel build
+          pip install -e ".[dev]"
+        shell: bash
+
+      - name: Run GFM / KaTeX Math Compliance Audit
+        run: python scripts/audit_gfm_math.py README.md docs/ARCHITECTURE.md
+        shell: bash
+
+      - name: Verify Formal Runtime Invariants
+        run: python -c "from oatse.engine import OATSEModel; m = OATSEModel(); res = m.verify_formal_theorems(); assert all(v['passed'] for v in res.values()), res"
+        shell: bash
+
+      - name: Verify 5-Scenario Maritime Deck & NOAA XBT Data
+        run: python -c "from oatse.scenarios import build_all_scenarios; s = build_all_scenarios(); assert len(s) == 5"
+        shell: bash
+
+      - name: Run Cross-Platform Pytest Verification Suite
+        run: pytest tests/test_oatse.py -v
+        shell: bash
+
+      - name: Run Full Mode A & Mode B Evaluation Benchmark
+        run: python scripts/evaluate_oatse.py
+        shell: bash
+
+  build-artifacts:
+    name: Build Wheels, SDist & Verify Portable HTML5 Studio
+    needs: test-matrix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip build
+          pip install -e ".[dev]"
+
+      - name: Build Wheel & Source Distribution
+        run: python -m build
+
+      - name: Verify Portable HTML5 Studio Exists
+        run: |
+          test -f results/oatse_portable_studio.html
+          ls -lh results/oatse_portable_studio.html
+
+      - name: Upload Package Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: oatse-packages
+          path: |
+            dist/*
+            results/oatse_portable_studio.html
+
+  publish-release:
+    name: Publish GitHub Release Assets
+    needs: build-artifacts
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Built Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: oatse-packages
+          path: release-assets
+
+      - name: Publish Release Assets to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            release-assets/*
+          generate_release_notes: true
