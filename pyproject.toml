@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "oatse"
-version = "0.1.0"
+version = "0.2.0"
 description = "OATSE: Ocean Acoustic Thermocline & Sonar Engine - Standalone 3D/4D underwater acoustics, thermocline ray-refraction, and seabed SAS impedance inversion workstation powered by machine-checked OcclusionTriad.lean mathematical physics"
 readme = "README.md"
 requires-python = ">=3.10"

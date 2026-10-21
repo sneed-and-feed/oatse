@@ -1,17 +1,17 @@
-# OATSE — Ocean Acoustic Thermocline & Sonar Engine (`v0.1.0`)
+# OATSE — Ocean Acoustic Thermocline & Sonar Engine (`v0.2.0`)
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](LICENSE)
 [![Lean 4 Checked](https://img.shields.io/badge/Lean_4-Formalized-blue.svg)](formalization/OcclusionTriad.lean)
 [![SWaP-C](https://img.shields.io/badge/SWaP--C-%3C_35_MB_SRAM-brightgreen.svg)](#)
 
 > **Live 3D WebGL Sonar Studio (Zero-Install Browser Demo):**
-> - **[Launch Interactive 3D Studio (v0.1.0 CDN)](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.1.0/results/oatse_portable_studio.html)** | **[main Dev Build](https://raw.githack.com/sneed-and-feed/oatse/main/results/oatse_portable_studio.html)**
+> - **[Launch Interactive 3D Studio (v0.2.0 CDN)](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html)** | **[main Dev Build](https://raw.githack.com/sneed-and-feed/oatse/main/results/oatse_portable_studio.html)**
 > - **One-Click Deep-Link Presets:**
->   - [**01. Munk SOFAR Channel & Shadow Zone (Deep Ocean Basin)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.1.0/results/oatse_portable_studio.html?scenario=munk_sofar_shadow_zone&field=oatse_shadow_tl_db&well=5&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
->   - [**02. GIUK Polar Halocline Collision Front (North Atlantic)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.1.0/results/oatse_portable_studio.html?scenario=giuk_polar_halocline_front&field=oatse_c_vp&well=6&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
->   - [**03. Littoral Shelf Internal Tide & Shallow Gas (Continental Margin)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.1.0/results/oatse_portable_studio.html?scenario=littoral_internal_tide_wedge&field=oatse_zp&well=5&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
->   - [**04. Subsea Cable Tap & Mine Corridor (Seabed Warfare Route)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.1.0/results/oatse_portable_studio.html?scenario=subsea_cable_mine_corridor&field=oatse_zp&well=6&sliceZ=14&sliceY=12&sliceX=12&zoom=1.05)
->   - [**05. North Atlantic Real NOAA XBT Field Doublet (UUV Glider + AUV SAS)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.1.0/results/oatse_portable_studio.html?scenario=north_atlantic_xbt_field_doublet&field=oatse_c_vp&well=4&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
+>   - [**01. Munk SOFAR Channel & Shadow Zone (Deep Ocean Basin)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html?scenario=munk_sofar_shadow_zone&field=oatse_shadow_tl_db&well=5&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
+>   - [**02. GIUK Polar Halocline Collision Front (North Atlantic)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html?scenario=giuk_polar_halocline_front&field=oatse_c_vp&well=6&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
+>   - [**03. Littoral Shelf Internal Tide & Shallow Gas (Continental Margin)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html?scenario=littoral_internal_tide_wedge&field=oatse_zp&well=5&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
+>   - [**04. Subsea Cable Tap & Mine Corridor (Seabed Warfare Route)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html?scenario=subsea_cable_mine_corridor&field=oatse_zp&well=6&sliceZ=14&sliceY=12&sliceX=12&zoom=1.05)
+>   - [**05. North Atlantic Real NOAA XBT Field Doublet (UUV Glider + AUV SAS)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html?scenario=north_atlantic_xbt_field_doublet&field=oatse_c_vp&well=4&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
 
 ![OATSE 3D WebGL Sonar & Thermocline Studio](docs/oatse_studio_preview.png)
 
@@ -22,7 +22,7 @@
 - **Seabed SAS Impedance Inversion and Sub-Bottom TTI Elasticity** $(Z_p = \rho V_p)$: Inverts normal and oblique reflection coefficients into coupled acoustic impedance Zp, and evaluates tilted transversely isotropic (TTI) marine sediments via Thomsen $(\epsilon, \delta, \gamma)$ parameters rotated by the $\mathrm{SO}(6)$ Kelvin-Mandel stiffness rotor (Theorem 2.7).
 - **Pure Non-Circular BeltramiCastShell** ($K = 8 + 8 = 16$ tokens): Recovers 100% of sub-meter seabed acoustic impedance spikes (proud/buried mines, cable taps, boulder stringers) under 10%–20% acoustic reverberation and bubble washouts using cross-shell exterior curl and 3-point discrete Morse impulse $(\Delta_- v \cdot \Delta_+ v > 0)$ with zero access to ground truth labels.
 - **4D Internal-Tide Continuity Splitter** (M2): Orthogonally decomposes repeat sonar sweeps into `H_clock (+) H_nope`, quarantining cyclic semidiurnal $M_2$ thermocline heaving in `H_clock` while recovering 100% of irreversible moving targets in `H_nope`.
-- **Zero-Install WebGL 3D Sonar Studio (`results/oatse_portable_studio.html`)**: Standalone single-file dark-mode workstation with interactive 3D chair-cut block viewer, 3 synchronized 2D cross-sections, trajectory tubes, and client-side `.las` / `.dev` / `.segy` ArrayBuffer drag-and-drop inspection.
+- **Zero-Install WebGL 3D Sonar Studio (`results/oatse_portable_studio.html`, v0.2.0)**: Standalone single-file dark-mode workstation with 17 selectable Mode A & Mode B 3D acoustic fields, 3D Snell acoustic eigenray / ray-fan overlays, 3D translucent front/seabed ribbons, full 3D view controls (Orbit, Shift-Pan, Zoom, Vertical Exaggeration `0.5x–3.0x`, Opacity, 4 Cutout Modes, 7 Camera Presets, Auto-Orbit Turntable, Snapshot PNG export, Quick-Flip comparison buttons), docked colorbar with live cursor marker, 3D orientation triad gizmo, de-collided UUV/AUV trajectory callout badges, interactive click-and-drag probing on all 2D slices and the 1D Beltrami cast log, live DarkSnail operator tuning sliders, and client-side `.las` / `.dev` / `.segy` drag-and-drop inspection.
 
 ---
 
@@ -48,7 +48,7 @@ Standard neural, Radial Basis Function (RBF), and kriging velocity modelers suff
 
 ---
 
-## Verified 3D Maritime Benchmark Results ? Mode A (Oracle Operator Verification) & Mode B (20 dB Blind Inversion)
+## Verified 3D Maritime Benchmark Results — Mode A (Oracle Operator Verification) & Mode B (20 dB Blind Inversion)
 
 All five benchmark scenarios are evaluated head-to-head against a standard 3D isotropic Gaussian RBF interpolator (`NaiveBoxBaseline`):
 
@@ -139,10 +139,12 @@ Every tagged release (`v*`) in [`.github/workflows/ci-and-release.yml`](.github/
 pip install -e ".[dev]"
 ```
 
-Export the portable HTML5 Studio:
+Export the portable HTML5 Studio, render the 4-panel showcase figure, or start the local interactive Studio server:
 
 ```bash
 oatse export-studio --output-dir results
+oatse showcase --scenario munk_sofar_shadow_zone --output results/oatse_sonar_showcase.png
+oatse serve --port 8090
 ```
 
 Inspect scenarios and stream out-of-core `.segy` volumes (< 35 MB peak heap):

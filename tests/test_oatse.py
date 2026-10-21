@@ -1,5 +1,5 @@
 """
-tests/test_oatse.py: Comprehensive Verification & Pytest Test Suite for OATSE v0.1.0.
+tests/test_oatse.py: Comprehensive Verification & Pytest Test Suite for OATSE v0.2.0.
 
 Tests cover:
   1. Machine-checked formal theorem runtime verification (Lean Theorems 2.1–2.7).
@@ -15,6 +15,11 @@ Tests cover:
   11. Mode B Blind Benchmark on subsea_cable_mine_corridor with SNR=20 dB.
   12. Mackenzie-Munk acoustic engine physics equations.
   13. IO round-tripping & memory-mapped SEGY slab streaming.
+  14. OATSEModel triad & cascade forward pass and scenario comparison without fallback.
+  15. Studio v0.2.0 payload serialization (17 cubes, Snell ray-fan, fault planes, Beltrami curves).
+  16. Portable HTML5 Studio v0.2.0 offline integrity & view controls verification.
+  17. Publication 4-panel showcase figure renderer & CLI subcommands (v0.2.0).
+  18. 4D TemporalSonarContinuitySplitter M2 internal tide vs. irreversible target separation.
 """
 
 from __future__ import annotations
@@ -425,3 +430,175 @@ def test_suite13_io_streaming_round_trip():
         las_record = read_las2_file(str(las_file))
         assert len(las_record.trajectory.md_m) == len(traj.md_m)
         assert np.allclose(las_record.curves["SOUND_SPEED"], c_prof, atol=1e-4)
+
+
+def test_suite14_oatse_model_triad_forward_and_scenario_comparison():
+    """Verify OATSEModel triad/cascade forward mode and genuine scenario comparison without fallback."""
+    from oatse.scenarios import evaluate_scenario_comparison
+
+    scen = build_maritime_scenario("giuk_polar_halocline_front", grid_shape=(16, 12, 12))
+    model = OATSEModel(
+        grid_shape=(16, 12, 12),
+        num_lithologies=len(MARITIME_ACOUSTIC_CATALOG),
+        num_fault_modes=6,
+    )
+    model.configure_fault_throw_rules(scen["fault_pairs"])
+
+    with torch.no_grad():
+        out = model(
+            ell_sym_3d=scen["ell_sym_3d"],
+            u_fault_3d=scen["u_fault_3d"],
+            tau_v=0.20,
+            triad_gain=1.0,
+            unroll_steps=2,
+            true_vp_cube=scen["true_vp_cube"],
+            true_rho_cube=scen["true_rho_cube"],
+        )
+
+    assert isinstance(out, dict)
+    assert out["vp_cube_kms"].shape == (16, 12, 12)
+    assert out["zp_cube_mrayl"].shape == (16, 12, 12)
+    assert out["max_orthogonality_residual"] <= 1e-7
+    assert out["cascade_radial_drift"] <= 1e-7
+
+    comp = evaluate_scenario_comparison("munk_sofar_shadow_zone", grid_shape=(32, 24, 24))
+    assert comp["metrics"]["oatse_vp_rmse_kms"] == pytest.approx(0.0, abs=1e-5)
+    assert comp["metrics"]["naive_vp_rmse_kms"] > 0.05
+    assert comp["metrics"]["beltrami_spike_recovery"] == pytest.approx(1.0, abs=1e-5)
+
+
+def test_suite15_studio_v020_serialization_and_ray_fan():
+    """Verify serialize_evaluation_payload includes all 18 cubes, Snell ray-fan, fault planes, and Beltrami curves."""
+    from oatse.studio import serialize_evaluation_payload
+
+    payload = serialize_evaluation_payload("munk_sofar_shadow_zone", grid_shape=(16, 12, 12))
+    assert payload["scenario_name"] == "munk_sofar_shadow_zone"
+    assert payload["grid_shape"] == [16, 12, 12]
+
+    expected_cubes = {
+        "oatse_c_vp",
+        "blind_oatse_c_vp",
+        "krig_c_vp",
+        "modas_eof_c_vp",
+        "naive_c_vp",
+        "true_c_vp",
+        "oatse_zp",
+        "oatse_shadow_tl_db",
+        "oatse_vp_tti",
+        "oatse_crit_angle_deg",
+        "oatse_density_rho",
+        "oatse_curl_salience",
+        "err_oatse",
+        "err_krig",
+        "precision_pi",
+        "jordan_cavity",
+        "timelapse_nope_plume",
+        "lithology_cube",
+    }
+    assert expected_cubes.issubset(set(payload["cubes"].keys()))
+
+    # Verify Snell acoustic eigenray fan
+    ray_fan = payload["acoustic_ray_fan"]
+    assert len(ray_fan) == 6
+    for ray in ray_fan:
+        assert len(ray["traj_z"]) > 10
+        assert len(ray["traj_y"]) == len(ray["traj_z"])
+        assert len(ray["traj_x"]) == len(ray["traj_z"])
+
+    # Verify fault planes metadata and Beltrami reconstructed curves
+    assert len(payload["fault_planes_meta"]) >= 1
+    assert len(payload["profiles"]) == 8
+    for p in payload["profiles"]:
+        assert len(p["true_vp"]) == 16
+        assert len(p["reconstructed_vp"]) == 16
+        assert len(p["naive_pooled_vp"]) == 16
+        assert len(p["salience"]) == 16
+
+
+def test_suite16_portable_studio_html_bundler_and_offline_integrity():
+    """Verify generate_studio_html and export_portable_html_studio produce self-contained v0.2.0 HTML."""
+    import re
+    from oatse.studio import generate_studio_html, serialize_evaluation_payload
+
+    mini_scenarios = {
+        "munk_sofar_shadow_zone": serialize_evaluation_payload("munk_sofar_shadow_zone", grid_shape=(16, 12, 12))
+    }
+    html = generate_studio_html(mini_scenarios)
+    assert "OATSE Studio v0.2.0" in html
+    assert "window.OATSE_PORTABLE_MODE = true;" in html
+
+    # Verify zero external CDN script/link tags
+    ext_refs = re.findall(r'(?:src|href)=["\']https?://', html, flags=re.IGNORECASE)
+    assert len(ext_refs) == 0, f"Found external network references in portable HTML: {ext_refs}"
+
+    # Verify v0.2.0 view controls exist in DOM
+    for control_id in [
+        "sliderVE",
+        "sliderOpacity",
+        "selectCutoutMode",
+        "btnFlipKrig",
+        "btnFlipModas",
+        "btnFlipTruth",
+        "chkRayFan",
+        "chkFrontPlanes",
+        "chkWellBadges",
+        "btnCamSofar",
+        "btnAutoOrbit",
+        "btnExportPNG",
+        "sliderTriadGain",
+        "sliderTauV",
+    ]:
+        assert f'id="{control_id}"' in html, f"Missing UI control {control_id} in studio HTML"
+
+
+def test_suite17_sonar_showcase_figure_and_cli_commands():
+    """Verify render_sonar_showcase_figure and CLI subcommands (v0.2.0)."""
+    import oatse
+    from oatse.cli import main as cli_main
+    from oatse.studio import render_sonar_showcase_figure
+
+    assert oatse.__version__ == "0.2.0"
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        out_png = Path(tmpdir) / "showcase.png"
+        res_path = render_sonar_showcase_figure(
+            scenario_name="munk_sofar_shadow_zone",
+            output_path=out_png,
+            grid_shape=(16, 12, 12),
+            dpi=80,
+        )
+        assert res_path.exists()
+        assert res_path.stat().st_size > 10_000
+
+        # Test CLI subcommands
+        assert cli_main(["scenarios", "list"]) == 0
+        assert cli_main(["scenarios", "inspect", "--scenario", "munk_sofar_shadow_zone"]) == 0
+
+
+def test_suite18_temporal_continuity_splitter_m2_tide_vs_target():
+    """Verify 4D TemporalSonarContinuitySplitter separates M2 tide heaving from moving targets."""
+    splitter = TemporalSonarContinuitySplitter(
+        m2_period_steps=12,
+        cycle_score_thresh=0.20,
+    )
+    T = 13
+    t_steps = torch.arange(T, dtype=torch.float32).view(T, 1, 1, 1)
+    omega = 2.0 * math.pi / 12.0
+    # Pure M2 tide oscillation in upper water column (z=4) + irreversible target anomaly at (t=6, z=10, y=6, x=6)
+    sweeps = torch.full((T, 16, 12, 12), 1.500)
+    sweeps[:, 4, :, :] += 0.04 * torch.cos(omega * t_steps[:, 0])
+    sweeps[6, 10, 6, 6] += 0.35
+
+    res = splitter.decompose_4d_sweeps(sweeps)
+    assert res["irreversible_target_recovery"] == pytest.approx(1.0, abs=1e-5)
+    assert bool(res["clock_mask"][4, 2, 2].item()) is True
+    assert bool(res["clock_mask"][10, 6, 6].item()) is False
+    assert float(res["h_nope"][6, 10, 6, 6].item()) == pytest.approx(1.850, abs=1e-3)
+
+    # Zero displacement edge case
+    zero_sweeps = torch.full((4, 16, 12, 12), 1.500)
+    res_zero = splitter.decompose_4d_sweeps(zero_sweeps)
+    assert float(res_zero["h_clock"].abs().max().item()) == 0.0
+    assert bool(res_zero["clock_mask"].any().item()) is False
+
+

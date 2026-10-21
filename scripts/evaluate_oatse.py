@@ -2,7 +2,7 @@
 """
 scripts/evaluate_oatse.py — Full 5-Scenario Mode A/B Blind Benchmark, Official Community
 Baseline Evaluations (ASA Pekeris Wedge, ONR/NRL Geoacoustic, OALIB Munk WKB), and
-Referee Audit Verification Suite for OATSE v0.1.0.
+Referee Audit Verification Suite for OATSE v0.2.0.
 
 Evaluates Scenarios 01-05:
   01: munk_sofar_shadow_zone         (Canonical Munk 1974 SOFAR Axial Waveguide & Thermocline Shadow)
@@ -58,7 +58,7 @@ def main() -> int:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     summary: Dict[str, Any] = {
-        "engine": "OATSE (Ocean Acoustic Thermocline & Sonar Engine) v0.1.0",
+        "engine": "OATSE (Ocean Acoustic Thermocline & Sonar Engine) v0.2.0",
         "license": "CC0-1.0 Universal Public Domain Dedication",
         "snr_db": 20.0,
         "grid_shape": [32, 24, 24],
@@ -66,7 +66,7 @@ def main() -> int:
     }
 
     print("=" * 135)
-    print("OATSE v0.1.0 — 5-Scenario 3D/4D Underwater Acoustics, Thermocline Ray-Refraction & SAS Impedance Inversion Evaluation")
+    print("OATSE v0.2.0 — 5-Scenario 3D/4D Underwater Acoustics, Thermocline Ray-Refraction & SAS Impedance Inversion Evaluation")
     print("=" * 135)
     header = (
         f"{'Scenario':<34} | {'Grid':<10} | {'NaiveBox':>8} | {'Krig':>8} | {'FKrig':>8} | "

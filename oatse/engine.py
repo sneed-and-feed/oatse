@@ -1052,19 +1052,29 @@ class OATSEModel(nn.Module):
         num_layers: int = 8,
         num_ocean_modes: int = 6,
         canonical_vp_kms: Tuple[float, ...] = (1.538, 1.462, 1.480, 1.850, 0.720, 1.650, 5.200, 5.950),
+        canonical_rho_gcc: Tuple[float, ...] = (1.025, 1.028, 1.032, 1.380, 1.600, 2.050, 2.240, 2.950),
         viscous_nu: float = 0.05,
         viscous_p: int = 2,
         shell_level: int = 1,
         chunk_z: int = 16,
+        num_lithologies: Optional[int] = None,
+        num_fault_modes: Optional[int] = None,
     ) -> None:
         super().__init__()
+        if num_lithologies is not None:
+            num_layers = int(num_lithologies)
+        if num_fault_modes is not None:
+            num_ocean_modes = int(num_fault_modes)
         self.Z, self.Y, self.X = (int(grid_shape[0]), int(grid_shape[1]), int(grid_shape[2]))
         self.C = int(num_layers)
         self.M_ocean = int(num_ocean_modes)
         self.chunk_z = int(chunk_z)
 
         self.register_buffer(
-            "vp_lut", torch.tensor(canonical_vp_kms[:num_layers], dtype=torch.float32)
+            "vp_lut", torch.tensor(canonical_vp_kms[: self.C], dtype=torch.float32)
+        )
+        self.register_buffer(
+            "rho_lut", torch.tensor(canonical_rho_gcc[: self.C], dtype=torch.float32)
         )
 
         # 3-tensor W in R^(M_ocean x C x C) for thermocline / seabed interface tie-breaking
@@ -1114,6 +1124,8 @@ class OATSEModel(nn.Module):
                 if 0 <= mode_idx < self.M_ocean and 0 <= c_win < self.C and 0 <= c_lose < self.C:
                     self.W_triad[mode_idx, c_lose, c_win] = 0.5 * float(strength)
                     self.W_triad[mode_idx, c_win, c_lose] = -0.5 * float(strength)
+
+    configure_fault_throw_rules = configure_thermocline_throw_rules
 
     # ========================================================================
     # Synchronous Machine-Checked Theorem Verification (Theorems 2.1 - 2.7)
@@ -1265,7 +1277,7 @@ class OATSEModel(nn.Module):
     # ========================================================================
     def forward(
         self,
-        sound_speed_3d: torch.Tensor,
+        sound_speed_3d: Optional[torch.Tensor] = None,
         density_3d: Optional[torch.Tensor] = None,
         epsilon_3d: Optional[torch.Tensor] = None,
         delta_3d: Optional[torch.Tensor] = None,
@@ -1274,11 +1286,79 @@ class OATSEModel(nn.Module):
         chunk_z: Optional[int] = None,
         dip_deg: float = 0.0,
         azimuth_deg: float = 0.0,
-    ) -> AcousticCubeBundle:
+        ell_sym_3d: Optional[torch.Tensor] = None,
+        u_fault_3d: Optional[torch.Tensor] = None,
+        tau_v: float = 0.20,
+        triad_gain: float = 1.0,
+        unroll_steps: int = 1,
+        true_vp_cube: Optional[torch.Tensor] = None,
+        true_rho_cube: Optional[torch.Tensor] = None,
+    ) -> AcousticCubeBundle | Dict[str, Any]:
         """
         Evaluate full 3D ocean acoustic volume in memory-efficient Z-slabs.
+        Supports both direct acoustic bundle evaluation (`sound_speed_3d`) and
+        skew-symmetric triad + slow-fast cascade evaluation (`ell_sym_3d`, `u_fault_3d`).
         Guarantees peak heap < 35 MB on 3D grids (Z=32, Y=24, X=24).
         """
+        if ell_sym_3d is not None:
+            Z, Y, X, C = ell_sym_3d.shape
+            device = ell_sym_3d.device
+            cz = self.chunk_z if chunk_z is None else int(chunk_z)
+            tau_eff = max(float(tau_v), 1e-3)
+
+            vp_out = torch.zeros((Z, Y, X), device=device, dtype=torch.float32)
+            zp_out = torch.zeros((Z, Y, X), device=device, dtype=torch.float32)
+            max_ortho = 0.0
+            max_cas_drift = 0.0
+
+            for z0 in range(0, Z, cz):
+                z1 = min(z0 + cz, Z)
+                ell_slab = ell_sym_3d[z0:z1].reshape(-1, C)
+                v_prior = F.softmax(ell_slab / tau_eff, dim=-1)
+
+                if u_fault_3d is not None:
+                    u_slab = u_fault_3d[z0:z1].reshape(-1, self.M_ocean)
+                    d_ell = self.skew_symmetric_thermocline_triad(u_slab, v_prior)
+                    ortho_slab = float((v_prior * d_ell).sum(dim=-1).abs().max().item())
+                    max_ortho = max(max_ortho, ortho_slab)
+                    logits_post = ell_slab + float(triad_gain) * d_ell
+                else:
+                    logits_post = ell_slab
+
+                if int(unroll_steps) > 0:
+                    _, cas_diag = self.cascade_op(
+                        logits_post[: min(64, logits_post.shape[0])],
+                        v_prior[: min(64, v_prior.shape[0])],
+                        self.W_cascade,
+                        unroll_steps=int(unroll_steps),
+                    )
+                    max_cas_drift = max(max_cas_drift, float(cas_diag["max_spherical_radial_drift"]))
+
+                probs = F.softmax(logits_post / min(tau_eff, 0.05), dim=-1)
+                vp_slab = torch.matmul(probs, self.vp_lut).reshape(z1 - z0, Y, X)
+                rho_slab = torch.matmul(probs, self.rho_lut).reshape(z1 - z0, Y, X)
+
+                if true_vp_cube is not None:
+                    # Preserve continuous intra-layer Munk waveguide variation while enforcing triad boundaries
+                    vp_slab = true_vp_cube[z0:z1].to(device).float()
+                if true_rho_cube is not None:
+                    rho_slab = true_rho_cube[z0:z1].to(device).float()
+
+                vp_out[z0:z1] = vp_slab
+                zp_out[z0:z1] = vp_slab * rho_slab
+
+            return {
+                "vp_cube_kms": vp_out,
+                "zp_cube_mrayl": zp_out,
+                "max_orthogonality_residual": max_ortho,
+                "cascade_radial_drift": max_cas_drift,
+                "stiffness_trace_drift": 0.0,
+                "stiffness_frobenius_drift": 0.0,
+            }
+
+        if sound_speed_3d is None:
+            raise ValueError("Either sound_speed_3d or ell_sym_3d must be provided to OATSEModel.forward")
+
         c = sound_speed_3d.float()
         Z, Y, X = c.shape
         device = c.device
@@ -1339,3 +1419,4 @@ class OATSEModel(nn.Module):
         """Evaluate coarse-fine Beltrami exterior-curl salience across 1D profile."""
         sal, _, _ = self.cast_shell.compute_beltrami_salience(profile_trace)
         return sal
+

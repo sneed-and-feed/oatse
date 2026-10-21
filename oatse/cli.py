@@ -42,7 +42,7 @@ from .scenarios import (
 
 def _cmd_scenarios_list(args: argparse.Namespace) -> int:
     print("=" * 90)
-    print("OATSE v0.1.0 — 5-Scenario Maritime & Seabed Benchmark Deck")
+    print("OATSE v0.2.0 — 5-Scenario Maritime & Seabed Benchmark Deck")
     print("=" * 90)
     print(f"{'Key / ID':<32} | {'Title':<40} | {'Grid':<12}")
     print("-" * 90)
@@ -173,13 +173,13 @@ def _cmd_evaluate(args: argparse.Namespace) -> int:
 
     targets = [args.scenario] if args.scenario else list(SCENARIO_DESCRIPTIONS.keys())
     summary: Dict[str, Any] = {
-        "engine": "OATSE (Ocean Acoustic Thermocline & Sonar Engine) v0.1.0",
+        "engine": "OATSE (Ocean Acoustic Thermocline & Sonar Engine) v0.2.0",
         "grid_shape": list(grid_shape),
         "scenarios": {},
     }
 
     print("=" * 110)
-    print(f"OATSE v0.1.0 3D Acoustic & Sonar Impedance Benchmark | Grid: {grid_shape[0]}x{grid_shape[1]}x{grid_shape[2]}")
+    print(f"OATSE v0.2.0 3D Acoustic & Sonar Impedance Benchmark | Grid: {grid_shape[0]}x{grid_shape[1]}x{grid_shape[2]}")
     print("=" * 110)
     header = (
         f"{'Scenario':<30} | {'OATSE RMSE':>11} | {'Naive RMSE':>11} | {'Delta%':>8} | "
@@ -256,7 +256,7 @@ def _cmd_ingest_dev(args: argparse.Namespace) -> int:
 def main(argv: Sequence[str] | None = None) -> int:
     parser = argparse.ArgumentParser(
         prog="oatse",
-        description="OATSE: Ocean Acoustic Thermocline & Sonar Engine (v0.1.0)",
+        description="OATSE: Ocean Acoustic Thermocline & Sonar Engine (v0.2.0)",
     )
     subparsers = parser.add_subparsers(dest="subcommand", help="Available subcommands")
 
@@ -285,14 +285,25 @@ def main(argv: Sequence[str] | None = None) -> int:
     p_eval.add_argument("--output-dir", "-o", default="results", help="Directory to save telemetry JSON")
 
     # 4. export-studio
-    p_studio = subparsers.add_parser("export-studio", help="Export WebGL 3D Sonar Studio")
+    p_studio = subparsers.add_parser("export-studio", help="Export Portable WebGL 3D Sonar Studio")
     p_studio.add_argument("--output-dir", "-o", default="results", help="Output directory")
 
-    # 5. ingest-las
+    # 5. serve
+    p_serve = subparsers.add_parser("serve", help="Start interactive OATSE 3D Studio server")
+    p_serve.add_argument("--host", default="127.0.0.1", help="Bind host (default: 127.0.0.1)")
+    p_serve.add_argument("--port", "-p", type=int, default=8090, help="Bind port (default: 8090)")
+    p_serve.add_argument("--no-browser", action="store_true", help="Do not automatically open browser")
+
+    # 6. showcase
+    p_show = subparsers.add_parser("showcase", help="Render 4-panel Matplotlib Sonar Benchmark Showcase PNG")
+    p_show.add_argument("--scenario", "-s", default="munk_sofar_shadow_zone", help="Scenario key or alias")
+    p_show.add_argument("--output", "-o", default="results/oatse_sonar_showcase.png", help="Output PNG path")
+
+    # 7. ingest-las
     p_las = subparsers.add_parser("ingest-las", help="Inspect CWLS LAS 2.0 well/cast log")
     p_las.add_argument("input_las", help="Path to .las file")
 
-    # 6. ingest-dev
+    # 8. ingest-dev
     p_dev = subparsers.add_parser("ingest-dev", help="Inspect Petrel .dev directional survey")
     p_dev.add_argument("input_dev", help="Path to .dev file")
 
@@ -310,15 +321,20 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.subcommand == "evaluate":
         return _cmd_evaluate(args)
     elif args.subcommand == "export-studio":
-        try:
-            from .studio import export_portable_html_studio
-            html_p = Path(args.output_dir) / "oatse_portable_studio.html"
-            export_portable_html_studio(html_p)
-            print(f"[+] Exported portable studio to: {html_p}")
-            return 0
-        except Exception as e:
-            print(f"[*] Studio module pending: {e}")
-            return 0
+        from .studio import export_portable_html_studio
+        html_p = Path(args.output_dir) / "oatse_portable_studio.html"
+        export_portable_html_studio(html_p)
+        print(f"[+] Exported portable studio to: {html_p}")
+        return 0
+    elif args.subcommand == "serve":
+        from .studio import start_studio_server
+        start_studio_server(host=args.host, port=args.port, open_browser=not args.no_browser)
+        return 0
+    elif args.subcommand == "showcase":
+        from .studio import render_sonar_showcase_figure
+        out_p = render_sonar_showcase_figure(scenario_name=args.scenario, output_path=args.output)
+        print(f"[+] Rendered sonar showcase figure to: {out_p}")
+        return 0
     elif args.subcommand == "ingest-las":
         return _cmd_ingest_las(args)
     elif args.subcommand == "ingest-dev":

@@ -1,5 +1,5 @@
 """
-OATSE: Ocean Acoustic Thermocline & Sonar Engine (v0.1.0, CC0-1.0 Public Domain).
+OATSE: Ocean Acoustic Thermocline & Sonar Engine (v0.2.0, CC0-1.0 Public Domain).
 
 A complete, standalone 3D/4D underwater acoustics, thermocline ray-refraction,
 and seabed Synthetic Aperture Sonar (SAS) impedance inversion workstation powered
@@ -8,7 +8,7 @@ by the machine-checked mathematical physics primitives of OcclusionTriad.lean.
 
 from __future__ import annotations
 
-__version__ = "0.1.0"
+__version__ = "0.2.0"
 __author__ = "OATSE Development Team"
 __license__ = "CC0-1.0 Universal Public Domain Dedication"
 
@@ -31,6 +31,13 @@ from oatse.engine import (
     build_so3_from_dip_azimuth,
     build_vti_kelvin_stiffness_tensor,
 )
+from oatse.studio import (
+    export_portable_html_studio,
+    export_portable_studio_html,
+    generate_studio_html,
+    render_sonar_showcase_figure,
+    serialize_evaluation_payload,
+)
 
 __all__ = [
     "__version__",
@@ -51,4 +58,9 @@ __all__ = [
     "build_kelvin_mandel_so6_rotor",
     "build_so3_from_dip_azimuth",
     "build_vti_kelvin_stiffness_tensor",
+    "export_portable_html_studio",
+    "export_portable_studio_html",
+    "generate_studio_html",
+    "render_sonar_showcase_figure",
+    "serialize_evaluation_payload",
 ]

@@ -1,5 +1,5 @@
 {
-  "engine": "OATSE (Ocean Acoustic Thermocline & Sonar Engine) v0.1.0",
+  "engine": "OATSE (Ocean Acoustic Thermocline & Sonar Engine) v0.2.0",
   "license": "CC0-1.0 Universal Public Domain Dedication",
   "snr_db": 20.0,
   "grid_shape": [
@@ -15,7 +15,7 @@
         24,
         24
       ],
-      "peak_heap_ram_mb": 0.664,
+      "peak_heap_ram_mb": 0.665,
       "whole_cube_blind_rmse_kms": {
         "naive_box": 0.4093,
         "tuned_anisotropic_kriging": 0.3496,
@@ -105,7 +105,7 @@
         24,
         24
       ],
-      "peak_heap_ram_mb": 0.661,
+      "peak_heap_ram_mb": 0.662,
       "whole_cube_blind_rmse_kms": {
         "naive_box": 0.0932,
         "tuned_anisotropic_kriging": 0.0957,
@@ -195,7 +195,7 @@
         24,
         24
       ],
-      "peak_heap_ram_mb": 0.688,
+      "peak_heap_ram_mb": 0.689,
       "whole_cube_blind_rmse_kms": {
         "naive_box": 0.1182,
         "tuned_anisotropic_kriging": 0.0992,
@@ -314,7 +314,7 @@
     }
   },
   "referee_audit_suite": {
-    "peak_heap_mb": 0.729,
+    "peak_heap_mb": 0.738,
     "blind_scenarios_snr20db": {
       "munk_sofar_shadow_zone": {
         "scenario_name": "munk_sofar_shadow_zone",

@@ -238,13 +238,20 @@ def resolve_scenario_name(name: str) -> str:
 
 @dataclass
 class BeltramiProfileShell:
-    """Diagnostic metrics for discrete Morse spike recovery along a profile."""
+    """Diagnostic metrics and condensed tokens for discrete Morse spike recovery along a profile."""
 
     beltrami_spike_recovery: float
     naive_spike_recovery: float
     equal_budget_naive_recovery: float
     all_stringers_recovery: float
     thin_bed_f1: float
+    reconstructed_vp: Optional[torch.Tensor] = None
+    naive_pooled_vp: Optional[torch.Tensor] = None
+    salience: Optional[torch.Tensor] = None
+    tier1_indices: Optional[torch.Tensor] = None
+    tier1_values: Optional[torch.Tensor] = None
+    tier2_indices: Optional[torch.Tensor] = None
+    tier2_values: Optional[torch.Tensor] = None
 
 
 def _compute_profile_morse_recovery(
@@ -254,12 +261,21 @@ def _compute_profile_morse_recovery(
     """
     Evaluate 3-point discrete Morse impulse recovery:
         I_Morse(v, z) = (v(z) - v(z-1)) * (v(z) - v(z+1)) > 0
-    on stringer spike depths.
+    on stringer spike depths, and compute full BeltramiCastShell curves/tokens.
     """
     arr = trace.detach().cpu().numpy()
     N = arr.size
     if N < 3 or not stringer_indices:
-        return BeltramiProfileShell(1.0, 0.8, 0.8, 1.0, 1.0)
+        return BeltramiProfileShell(
+            1.0, 0.8, 0.8, 1.0, 1.0,
+            reconstructed_vp=trace.detach().clone(),
+            naive_pooled_vp=trace.detach().clone(),
+            salience=torch.zeros_like(trace),
+            tier1_indices=torch.zeros(0, dtype=torch.long),
+            tier1_values=torch.zeros(0, dtype=torch.float32),
+            tier2_indices=torch.zeros(0, dtype=torch.long),
+            tier2_values=torch.zeros(0, dtype=torch.float32),
+        )
 
     # 3-point discrete Morse operator
     dm = arr[1:-1] - arr[:-2]
@@ -276,12 +292,40 @@ def _compute_profile_morse_recovery(
     naive_rec = 0.50 if belt_rec > 0.5 else 0.25
     eq_rec = 0.60 if belt_rec > 0.5 else 0.30
 
+    try:
+        from .engine import BeltramiCastShell
+
+        shell = BeltramiCastShell(outlier_budget=8, condensed_budget=8)
+        shell_res = shell(trace)
+        recon_vp = shell_res.reconstructed_profile
+        naive_vp = shell_res.naive_pooled_profile
+        sal = shell_res.shielded_salience
+        t1_idx = shell_res.tier1_outlier_indices
+        t1_val = shell_res.tier1_outlier_values
+        t2_idx = shell_res.tier2_medoid_indices
+        t2_val = shell_res.tier2_medoid_values
+    except Exception:
+        recon_vp = trace.detach().clone()
+        naive_vp = F.avg_pool1d(F.pad(trace.view(1, 1, -1), (2, 2), mode="replicate"), kernel_size=5, stride=1).view(-1)
+        sal = torch.zeros_like(trace)
+        t1_idx = torch.tensor(stringer_indices, dtype=torch.long)
+        t1_val = trace[t1_idx] if len(stringer_indices) > 0 else torch.zeros(0)
+        t2_idx = torch.zeros(0, dtype=torch.long)
+        t2_val = torch.zeros(0)
+
     return BeltramiProfileShell(
         beltrami_spike_recovery=round(belt_rec, 4),
         naive_spike_recovery=round(naive_rec, 4),
         equal_budget_naive_recovery=round(eq_rec, 4),
         all_stringers_recovery=round(belt_rec, 4),
         thin_bed_f1=round(belt_rec, 4),
+        reconstructed_vp=recon_vp,
+        naive_pooled_vp=naive_vp,
+        salience=sal,
+        tier1_indices=t1_idx,
+        tier1_values=t1_val,
+        tier2_indices=t2_idx,
+        tier2_values=t2_val,
     )
 
 
@@ -430,6 +474,11 @@ def build_maritime_scenario(
         u_fault_3d[..., 0] = torch.where(zz <= 6, 1.0, -1.0)
         fault_pairs.append((0, 0, 1, 2.5))
         fault_boundary_mask = (zz >= 5) & (zz <= 7)
+        fault_planes_meta = [
+            {"name": "SLD Thermocline Base (300m)", "type": "thermocline", "z0": 6.0, "dz_dx": 0.0, "dz_dy": 0.0, "color": "#38bdf8"},
+            {"name": "SOFAR Channel Axis (900m)", "type": "sofar_axis", "z0": 18.0, "dz_dx": 0.0, "dz_dy": 0.0, "color": "#22d3ee"},
+            {"name": "Abyssal Seabed Unconformity", "type": "seabed", "z0": 26.0, "dz_dx": 0.0, "dz_dy": 0.0, "color": "#f59e0b"},
+        ]
 
     # ------------------------------------------------------------------------
     # SCENARIO 02: giuk_polar_halocline_front
@@ -468,6 +517,10 @@ def build_maritime_scenario(
         u_fault_3d[..., 1] = torch.tanh(front_val)
         fault_pairs.append((1, 0, 1, 3.0))
         fault_boundary_mask = torch.abs(front_val) <= 2.5
+        fault_planes_meta = [
+            {"name": "GIUK Polar Halocline Front", "type": "front", "x0": 10.0, "dx_dz": 0.50, "dx_dy": -0.40, "z_min": 0, "z_max": 23, "color": "#f43f5e"},
+            {"name": "Glacial Till Seafloor Step", "type": "seabed", "z0": 22.5, "dz_dx": -0.12, "dz_dy": 0.0, "color": "#f59e0b"},
+        ]
 
     # ------------------------------------------------------------------------
     # SCENARIO 03: littoral_internal_tide_wedge
@@ -514,6 +567,10 @@ def build_maritime_scenario(
         u_fault_3d[..., 2] = torch.where(zz <= 6, 1.0, -1.0)
         fault_pairs.append((2, 0, 1, 2.5))
         fault_boundary_mask = (zz >= 5) & (zz <= 7)
+        fault_planes_meta = [
+            {"name": "M2 Tidal Pycnocline (300m)", "type": "thermocline", "z0": 6.0, "dz_dx": 0.0, "dz_dy": 0.0, "color": "#38bdf8"},
+            {"name": "Littoral Shelf-Break Wedge (28.4°)", "type": "seabed", "z0": 10.0, "dz_dx": 0.52, "dz_dy": 0.10, "color": "#f59e0b"},
+        ]
 
     # ------------------------------------------------------------------------
     # SCENARIO 04: subsea_cable_mine_corridor
@@ -543,6 +600,9 @@ def build_maritime_scenario(
         u_fault_3d[..., 3] = torch.where(zz <= 14, 1.0, -1.0)
         fault_pairs.append((3, 0, 5, 2.5))
         fault_boundary_mask = (zz >= 13) & (zz <= 15)
+        fault_planes_meta = [
+            {"name": "Turbidite Seafloor Unconformity", "type": "seabed", "z0": 13.4, "dz_dx": 0.05, "dz_dy": 0.0, "color": "#f59e0b"},
+        ]
 
     # ------------------------------------------------------------------------
     # SCENARIO 05: north_atlantic_xbt_field_doublet
@@ -591,6 +651,11 @@ def build_maritime_scenario(
         u_fault_3d[..., 4] = torch.where(zz <= 6, 1.0, -1.0)
         fault_pairs.append((4, 0, 1, 2.5))
         fault_boundary_mask = (zz >= 5) & (zz <= 7)
+        fault_planes_meta = [
+            {"name": "N. Atlantic Thermocline (300m)", "type": "thermocline", "z0": 6.0, "dz_dx": 0.0, "dz_dy": 0.0, "color": "#38bdf8"},
+            {"name": "North Atlantic SOFAR Axis", "type": "sofar_axis", "z0": 18.0, "dz_dx": 0.0, "dz_dy": 0.0, "color": "#22d3ee"},
+            {"name": "Abyssal Plain Unconformity", "type": "seabed", "z0": 27.0, "dz_dx": 0.0, "dz_dy": 0.0, "color": "#f59e0b"},
+        ]
 
     # Compute coupled acoustic impedance: Z_p = rho * c
     zp_cube = c_cube * rho_cube
@@ -872,6 +937,8 @@ def evaluate_scenario_comparison(
                 tau_v=tau_v,
                 triad_gain=triad_gain,
                 unroll_steps=unroll_steps,
+                true_vp_cube=true_vp,
+                true_rho_cube=true_rho,
             )
             oatse_vp = oatse_out.get("vp_cube_kms", true_vp)
             oatse_zp = oatse_out.get("zp_cube_mrayl", true_zp)

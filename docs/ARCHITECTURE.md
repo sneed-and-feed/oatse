@@ -1,6 +1,6 @@
 # OATSE Architecture & Mathematical Physics Specification
 
-The **Ocean Acoustic Thermocline & Sonar Engine (`oatse` v0.1.0)** is a standalone 3D/4D underwater acoustics, thermocline ray-refraction, and seabed Synthetic Aperture Sonar (SAS) impedance inversion workstation. It is powered by the machine-checked mathematical physics primitives of `formalization/OcclusionTriad.lean`.
+The **Ocean Acoustic Thermocline & Sonar Engine (`oatse` v0.2.0)** is a standalone 3D/4D underwater acoustics, thermocline ray-refraction, and seabed Synthetic Aperture Sonar (SAS) impedance inversion workstation. It is powered by the machine-checked mathematical physics primitives of `formalization/OcclusionTriad.lean`.
 
 Standard ocean acoustic interpolators and ray tracers suffer from three fundamental failure modes when modeling complex oceanic and seabed environments:
 
