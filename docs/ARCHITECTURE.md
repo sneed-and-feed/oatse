@@ -19,7 +19,7 @@ The mathematical machinery in `oatse` is isomorphic to the verified algebra of `
 | **Thermocline & Seafloor Triad** | Fault & Unconformity Triad | `SkewSymmetricTriadOperator` | Theorem 2.1 & 2.2: exact antisymmetry $W_{i, j, k} + W_{i, k, j} = 0$, breaking 50/50 symmetric ties in $\mathfrak{so}(C)$ with zero radial drift. |
 | **Shadow-Zone Ray Energy Conservator** | Deep-Basin Tangent Projector | `darksnail_readout_energy_conservation` | Theorem 2.3 & 2.6: pointwise tangent orthogonality $\lvert\langle v, \Delta\ell\rangle\rvert \le 10^{-8}$ and zero cascade radial drift. |
 | **Munk/Mackenzie Baseline Prior** | Undisturbed Stratified Basin Prior | `darksnail_step0_system1_homotopy` | Theorem 2.4: exact reduction to canonical Munk (1974) and Mackenzie (1981) stratification at zero perturbation. |
-| **Beltrami Seabed & Spike Shell** | Well-Log Beltrami Shell | `BeltramiCallosalShell` | Theorem 2.5: exterior-curl salience with 3-point discrete Morse impulse ($\Delta_- v \cdot \Delta_+ v > 0$), recovering 100% of thin targets under 10%–20% washout. |
+| **Beltrami Seabed & Spike Shell** | Well-Log Beltrami Shell | `BeltramiCallosalShell` | Theorem 2.5: exterior-curl salience with 3-point discrete Morse impulse $(\Delta_- v \cdot \Delta_+ v > 0)$, recovering 100% of thin targets under 10%–20% washout. |
 | **Sub-Bottom TTI Sediment Rotor** | TTI Shale Stiffness Rotor | `ThomsenTTIElasticModulusEngine` | Theorem 2.7: $\mathrm{SO}(6)$ Kelvin-Mandel rotor preserving trace $\mathrm{Tr}(M C M^\top) = \mathrm{Tr}(C)$ and positive-definiteness under bedding rotations. |
 | **4D Internal-Tide Splitter** | 4D Time-Lapse Survey Splitter | `TemporalClockContentSplitter` | Direct sum `H_clock (+) H_nope`, quarantining cyclic $M_2$ tides in `H_clock` while isolating moving targets in `H_nope`. |
 | **Sub-Thermocline Cavity Core** | Salt Diapir & Karst Core | `RoPE3DMedoidPooler` | 6-way Jordan $\beta_1$ cavity isolation identifying enclosed shadow targets and shallow free-gas pockets. |
@@ -78,7 +78,7 @@ The canonical baseline parameters are:
 - Axis depth: $z_{\mathrm{axis}} = 1000.0\text{ m} = 1.0\text{ km}$
 - Ocean scale depth: $B_{\mathrm{scale}} = 1300.0\text{ m} = 1.3\text{ km}$
 
-Near the sound channel axis ($\vert\tilde{\eta}\vert \ll 1$), Taylor expansion yields the parabolic waveguide:
+Near the sound channel axis $(\vert\tilde{\eta}\vert \ll 1)$, Taylor expansion yields the parabolic waveguide:
 
 ```math
 c(z) \approx c_0 \left[ 1 + \frac{2 \epsilon_{\mathrm{munk}}}{B_{\mathrm{scale}}^2} (z - z_{\mathrm{axis}})^2 \right]
@@ -108,7 +108,7 @@ Rays launched within the duct satisfy:
 - If $\vert\theta_0\vert \le \theta_c(\text{source})$: ray reflects upward before penetrating `z_SLD`, propagating as a trapped surface-duct wave.
 - If $\vert\theta_0\vert > \theta_c(\text{source})$: ray traverses `z_SLD` into the cold thermocline, refracting steeply downward.
 
-### 3.2 Acoustic Shadow-Zone Transmission Loss ($TL$)
+### 3.2 Acoustic Shadow-Zone Transmission Loss $(TL)$
 
 The limiting ray launched horizontally at $z_{\mathrm{SLD}}$ demarcates a geometric shadow zone in the upper thermocline. Direct geometric rays cannot enter this region, producing severe transmission loss:
 
@@ -128,7 +128,7 @@ producing realistic 25 to 50 dB signal drops for targets submerged inside the sh
 
 ## 4. 4D Internal-Tide Splitting & Irreversible Target Transit
 
-Internal solitary waves and semidiurnal $M_2$ tides ($T \approx 12.42\text{ h}$) cause vertical heaving of the seasonal thermocline by 10 to 40 meters, producing periodic travel-time fluctuations.
+Internal solitary waves and semidiurnal $M_2$ tides $(T \approx 12.42\text{ h})$ cause vertical heaving of the seasonal thermocline by 10 to 40 meters, producing periodic travel-time fluctuations.
 
 To prevent reversible internal-tide heaving from triggering false target alarms, `TemporalSonarContinuitySplitter` projects multi-sweep 4D sonar cubes into two orthogonal subspaces:
 
@@ -143,7 +143,7 @@ To prevent reversible internal-tide heaving from triggering false target alarms,
 
 ## 5. Synthetic Aperture Sonar (SAS) Impedance Inversion & Sediment Elasticity
 
-### 5.1 Seabed Acoustic Impedance ($Z_p$)
+### 5.1 Seabed Acoustic Impedance $(Z_p)$
 
 Seabed acoustic impedance $Z_p$ dictates acoustic plane-wave reflection at normal incidence:
 
@@ -259,7 +259,7 @@ Scenario 05: north_atlantic_xbt_field_doublet
 | Sector / Mission | Legacy Sonar Failure Mode | `oatse` DarkSnail Primitive | Operational Deliverable |
 | :--- | :--- | :--- | :--- |
 | **1. Anti-Submarine Warfare (ASW) Sub-Thermocline Tracking** | Rays refract downward beneath Sonic Layer Depth; target lost in shadow zone; tomography blows up. | Theorem 2.3 & 2.6 ($\lvert\langle v, \Delta\ell\rangle\rvert \le 10^{-8}$, zero radial drift) + 6-way Jordan $\beta_1$ cavity core. | Stable tracking of quiet submarines and UUVs operating inside deep shadow cavities with zero numerical blowup. |
-| **2. Synthetic Aperture Sonar (SAS) Seabed Mine Countermeasures** | Multipath reverberation and bubble sweep washouts create false spikes; uniform pooling smears thin targets. | Non-circular `BeltramiCastShell` + 3-point discrete Morse impulse ($\Delta_- v \cdot \Delta_+ v > 0$). | 100% recovery of proud/buried mine and cable targets with complete rejection of bubble washouts and reverberation clutter. |
+| **2. Synthetic Aperture Sonar (SAS) Seabed Mine Countermeasures** | Multipath reverberation and bubble sweep washouts create false spikes; uniform pooling smears thin targets. | Non-circular `BeltramiCastShell` + 3-point discrete Morse impulse $(\Delta_- v \cdot \Delta_+ v > 0)$. | 100% recovery of proud/buried mine and cable targets with complete rejection of bubble washouts and reverberation clutter. |
 | **3. Offshore Wind & Subsea Telecom Cable Route Inspection** | Multi-bounce reverberation masks shallow sub-bottom gas pockets ($Z_p < 1.0$ vs. boulders $> 4.5$). | 6-way Jordan gas-pocket cavity isolation + surgical 1/N_vox ray quantile weighting. | Pinpoints cable tap anomalies (Zp = 23.95) and sub-bottom gas pockets ahead of seabed trenching and cable laying. |
 | **4. Polar Halocline & Frontal Acoustic Tomography (GIUK Gap)** | Smooth interpolators smear the thermal/saline collision front across bathymetric ridges into blurred transitions. | Theorem 2.1 & 2.2 ($\mathfrak{so}(C)$ skew-symmetric tie-breaker) + $Z$-slab chunking (`chunk_z = 16`). | Resolves sharp step-function halocline fronts with 100% boundary sharpness and $< 35\text{ MB}$ UUV SRAM cache footprint. |
 | **5. 4D Internal-Tide Harbor & Littoral Surveillance** | Semidiurnal M2 internal-tide heaving (12.42 h) generates continuous false velocity alarms in time-lapse monitoring. | `TemporalSonarContinuitySplitter` in `H_clock (+) H_nope`. | Quarantines cyclic tidal oscillation in `H_clock` while isolating irreversible diver, UUV, or mine deployment in `H_nope`. |
@@ -300,7 +300,7 @@ where $\bar{c}(z)$ is the climatological vertical mean profile, $\phi_m(z)$ are 
 W_{\mathrm{train}} - \bar{W} = U \Sigma V^\top
 ```
 
-In `oatse`, `EOFAnisotropicKriging` enforces zero target leakage: the EOF vertical basis modes are extracted strictly from training casts ($W_{\mathrm{train}}$). Horizontal mode coefficients are interpolated using 2D Objective Analysis / Anisotropic Kriging with Matérn-3/2 covariance:
+In `oatse`, `EOFAnisotropicKriging` enforces zero target leakage: the EOF vertical basis modes are extracted strictly from training casts $(W_{\mathrm{train}})$. Horizontal mode coefficients are interpolated using 2D Objective Analysis / Anisotropic Kriging with Matérn-3/2 covariance:
 
 ```math
 C(r) = \sigma^2 \left( 1 + \frac{\sqrt{3} r}{\ell} \right) \exp\left( -\frac{\sqrt{3} r}{\ell} \right)
@@ -319,7 +319,7 @@ While `EOFAnisotropicKriging` captures broad vertical stratification, its modal 
 The Acoustical Society of America (ASA) canonical wedge benchmark (Jensen & Ferla 1990) represents range-dependent shallow-water acoustic propagation over an inclined penetrable seabed:
 
 - **Bathymetry**: Water depth slopes from $200\text{ m}$ at range $r = 0\text{ km}$ to $0\text{ m}$ at range $r = 4\text{ km}$ ($2.8624^\circ$ wedge angle).
-- **Water Column**: Sound speed $c_w = 1.500\text{ km/s}$, density $\rho = 1.00\text{ g/cm}^3$, zero attenuation ($\alpha = 0\text{ dB/km}$).
+- **Water Column**: Sound speed $c_w = 1.500\text{ km/s}$, density $\rho = 1.00\text{ g/cm}^3$, zero attenuation $(\alpha = 0\text{ dB/km})$.
 - **Penetrable Sediment Half-Space**: Sound speed $c_b = 1.700\text{ km/s}$, density $\rho = 1.50\text{ g/cm}^3$, attenuation $\alpha = 0.5\text{ dB/wavelength}$.
 
 By Snell's law, the critical grazing angle at the water-sediment interface is:
@@ -346,9 +346,9 @@ Acoustic energy converts from trapped discrete waveguide modes into continuous r
 
 The Office of Naval Research and Naval Research Laboratory Geoacoustic Inversion Workshop benchmark (Chapman & Tolstoy 1998; Chapman et al. 2003) provides standard blind inversion cases:
 
-- **Case A/C Stratification**: A homogeneous water layer atop a marine sediment layer ($V_{p, \mathrm{sed}} = 1.650\text{ km/s}, \rho_{\mathrm{sed}} = 1.60\text{ g/cm}^3$).
-  The underlying high-impedance basement has properties ($V_{p, \mathrm{base}} = 2.250\text{ km/s}, \rho_{\mathrm{base}} = 1.70\text{ g/cm}^3$).
-- **Embedded Thin Anomaly**: A thin anomalous sub-bottom layer ($Z_p = 3.825\text{ MRayl}$) embedded within the sediment column.
+- **Case A/C Stratification**: A homogeneous water layer atop a marine sediment layer $(V_{p, \mathrm{sed}} = 1.650\text{ km/s}, \rho_{\mathrm{sed}} = 1.60\text{ g/cm}^3)$.
+  The underlying high-impedance basement has properties $(V_{p, \mathrm{base}} = 2.250\text{ km/s}, \rho_{\mathrm{base}} = 1.70\text{ g/cm}^3)$.
+- **Embedded Thin Anomaly**: A thin anomalous sub-bottom layer $(Z_p = 3.825\text{ MRayl})$ embedded within the sediment column.
 
 Legacy inversion methods smear the thin anomaly into an imperceptible slope. `BlindOATSE` deploys the pure non-circular `BeltramiCastShell` with discrete Morse impulse filtering:
 
