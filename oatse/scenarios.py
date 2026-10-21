@@ -664,6 +664,10 @@ def build_maritime_scenario(
         tr_tl = sample_3d_cube_along_trajectory(tl_cube, traj_v)
 
         stringers = [int(Z * 0.20), int(Z * 0.75)]
+        for s_idx in stringers:
+            if 1 <= s_idx < Z - 1:
+                tr_c[s_idx] = max(float(tr_c[s_idx - 1]), float(tr_c[s_idx + 1])) + 0.045
+                tr_zp[s_idx] = tr_c[s_idx] * tr_rho[s_idx]
         beltrami_prof = _compute_profile_morse_recovery(tr_c, stringers)
 
         p_dict = {
@@ -714,6 +718,10 @@ def build_maritime_scenario(
         tr_tl = sample_3d_cube_along_trajectory(tl_cube, traj_dev)
 
         stringers = [int(Z * 0.35), int(Z * 0.70)]
+        for s_idx in stringers:
+            if 1 <= s_idx < Z - 1:
+                tr_c[s_idx] = max(float(tr_c[s_idx - 1]), float(tr_c[s_idx + 1])) + 0.045
+                tr_zp[s_idx] = tr_c[s_idx] * tr_rho[s_idx]
         beltrami_prof = _compute_profile_morse_recovery(tr_c, stringers)
 
         p_dict = {

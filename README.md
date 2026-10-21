@@ -13,6 +13,8 @@
 >   - [**04. Subsea Cable Tap & Mine Corridor (Seabed Warfare Route)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.1.0/results/oatse_portable_studio.html?scenario=subsea_cable_mine_corridor&field=oatse_zp&well=6&sliceZ=14&sliceY=12&sliceX=12&zoom=1.05)
 >   - [**05. North Atlantic Real NOAA XBT Field Doublet (UUV Glider + AUV SAS)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.1.0/results/oatse_portable_studio.html?scenario=north_atlantic_xbt_field_doublet&field=oatse_c_vp&well=4&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
 
+![OATSE 3D WebGL Sonar & Thermocline Studio](docs/oatse_studio_preview.png)
+
 **OATSE** (**O**cean **A**coustic **T**hermocline & **S**onar **E**ngine) is a standalone 3D/4D underwater acoustics, thermocline ray-refraction, and seabed Synthetic Aperture Sonar (SAS) impedance inversion workstation powered by the machine-checked mathematical physics primitives of `formalization/OcclusionTriad.lean`:
 
 - **Flight & UUV SWaP-C Memory Envelope (< 35 MB Hard Ceiling, ~1.30–1.60 MB Active Heap)**: Evaluates all 3D spectral, multi-bounce ray, $\beta_1$ shadow-zone cavity enclosures, and Lie-algebraic $\mathfrak{so}(C)$ triad operators in $Z$-slabs (`chunk_z = 16`) and streams `.segy` volumes via out-of-core Inline-slab `np.memmap` windowing so the entire working set fits within a 4 MB UUV/glider L2/L3 SRAM cache.

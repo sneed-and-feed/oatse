@@ -843,7 +843,16 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       const cy = Math.max(0, Math.min(Y - 1, y));
       const cx = Math.max(0, Math.min(X - 1, x));
       const val = cube[cz]?.[cy]?.[cx] ?? 1.5;
-      const norm = (val - meta.min) / Math.max(1e-6, meta.max - meta.min);
+      let norm;
+      if (meta.unit === "km/s") {
+        if (val <= 1.555) {
+          norm = 0.04 + 0.50 * Math.max(0.0, Math.min(1.0, (val - 1.455) / (1.545 - 1.455)));
+        } else {
+          norm = 0.58 + 0.42 * Math.max(0.0, Math.min(1.0, (val - 1.555) / (5.50 - 1.555)));
+        }
+      } else {
+        norm = (val - meta.min) / Math.max(1e-6, meta.max - meta.min);
+      }
       return sampleColormap(norm, meta.mode);
     }
 
