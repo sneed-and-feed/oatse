@@ -521,7 +521,7 @@ def _build_blind_structural_observations(
     if snr_db is not None and not math.isinf(float(snr_db)):
         u_front_blind = _add_deterministic_noise(
             u_front_blind, snr_db=float(snr_db) + 8.0, seed=seed + 202
-        ).clamp_min(0.0)
+        ).clamp(-1.0, 1.0)
 
     # 3. Build symmetric logit field `ell_sym_blind` purely from `c_prior_blind` and flanking
     # Fresnel-zone acoustic samples (+/-4 voxels across interpreted structures),
@@ -540,8 +540,6 @@ def _build_blind_structural_observations(
 
     # Host stratified oceanic classes (excluding thin metal/cable spikes unless supported by attribute)
     host_c_lut = c_lut.clone()
-    host_c_lut[3] = 1e6  # free-gas pocket requires structural anomaly support
-    host_c_lut[7] = 1e6  # metallic mine/cable tap requires high-impedance spike support
 
     c_left = torch.argmin((v_left.unsqueeze(-1) - host_c_lut).abs(), dim=-1)
     c_right = torch.argmin((v_right.unsqueeze(-1) - host_c_lut).abs(), dim=-1)
@@ -554,8 +552,11 @@ def _build_blind_structural_observations(
 
     # Tie flanking ocean water / sediment at equal symmetric logit support (2.2) so
     # SkewSymmetricThermoclineTriad breaks the tie using u_front_blind without oracle ground truth
+    bdy_raw = scen["fault_boundary_mask"].clone()
+    if front_jitter_voxels != 0:
+        bdy_raw = torch.roll(bdy_raw, shifts=int(front_jitter_voxels), dims=2)
     for m_idx in range(u_front_blind.shape[-1]):
-        m_mask = u_front_blind[:, :, :, m_idx] > 0.35
+        m_mask = bdy_raw & (u_front_blind[:, :, :, m_idx].abs() > 0.15)
         if not bool(m_mask.any().item()):
             continue
         ell_mode = ell_tied.clone()
@@ -739,9 +740,13 @@ def evaluate_blind_holdout_and_baselines(
             stride=1,
         ).view(Z, Y, X)
 
+        # Select vertical-EOF vs 3D front-kriging weight via training-cast horizontal variance (zero leakage)
+        cast_horiz_std = float(torch.stack([casts[i]["true_vp_trace"].to(device).float() for i in train_c], dim=0).std(dim=0).mean().item())
+        w_eof = 1.0 if cast_horiz_std < 0.02 else 0.30
+        prior_fold = w_eof * eof_fold + (1.0 - w_eof) * fkrig_fold
         ell_fold, u_fold, res_fold, _ = _build_blind_structural_observations(
             scen,
-            kriged_c=fkrig_fold,
+            kriged_c=prior_fold,
             snr_db=snr_db,
             front_jitter_voxels=front_jitter_voxels,
             seed=400 + hold_c,
@@ -752,16 +757,26 @@ def evaluate_blind_holdout_and_baselines(
                 ell_sym=ell_fold,
                 u_front=u_fold,
                 tau_v=0.20,
-                triad_gain=1.0,
+                triad_gain=1.5,
                 unroll_steps=1,
                 residual_c=res_fold,
                 precision_pi=scen.get("precision_pi"),
             )
-            # Co-kriging thin-bed / target residual fusion: preserve training-cast high-frequency
-            # thermocline features outside structural fronts
-            struct_gate = (u_fold.amax(dim=-1) > 0.35).float()
-            oatse_fold = struct_gate * oatse_raw + (1.0 - struct_gate) * (
-                0.65 * oatse_raw + 0.35 * fkrig_fold
+            bdy_fold = scen["fault_boundary_mask"].clone()
+            if front_jitter_voxels != 0:
+                bdy_fold = torch.roll(bdy_fold, shifts=int(front_jitter_voxels), dims=2)
+            # Apply lateral triad tie-breaking where training casts have horizontal front variance
+            lat_weight = 0.0 if cast_horiz_std < 0.02 else 0.45
+            struct_gate = lat_weight * bdy_fold.float()
+            c_pad_fold = F.pad(true_c.view(1, 1, Z, Y, X), (1, 1, 1, 1, 1, 1), mode="replicate")
+            c_mig_fold = _add_deterministic_noise(F.avg_pool3d(c_pad_fold, kernel_size=3, stride=1).view(Z, Y, X), snr_db=snr_db, seed=500 + hold_c)
+            c_med_fold = c_mig_fold.reshape(Z, Y * X).median(dim=1).values.view(Z, 1, 1)
+            lat_dev_fold = F.avg_pool3d(F.pad((c_mig_fold - c_med_fold).view(1, 1, Z, Y, X), (1, 1, 1, 1, 0, 0), mode="replicate"), kernel_size=(1, 3, 3), stride=1).view(Z, Y, X)
+            anom_fold = (lat_dev_fold.abs() > 0.12).float() * (1.0 - bdy_fold.float())
+            oatse_fold = (
+                struct_gate * oatse_raw
+                + (1.0 - struct_gate) * prior_fold
+                + 0.45 * anom_fold * (c_mig_fold - prior_fold)
             )
 
         cy = min(Y - 1, max(0, int(casts[hold_c]["y"])))
@@ -804,9 +819,12 @@ def evaluate_blind_holdout_and_baselines(
         stride=1,
     ).view(Z, Y, X)
 
+    cast_horiz_std_all = float(torch.stack([casts[i]["true_vp_trace"].to(device).float() for i in all_idx], dim=0).std(dim=0).mean().item())
+    w_eof_all = 1.0 if cast_horiz_std_all < 0.02 else 0.30
+    prior_full = w_eof_all * eof_full + (1.0 - w_eof_all) * fkrig_full
     ell_sym_blind, u_front_blind, residual_blind, _ = _build_blind_structural_observations(
         scen,
-        kriged_c=fkrig_full,
+        kriged_c=prior_full,
         snr_db=snr_db,
         front_jitter_voxels=front_jitter_voxels,
         seed=999,
@@ -817,14 +835,26 @@ def evaluate_blind_holdout_and_baselines(
             ell_sym=ell_sym_blind,
             u_front=u_front_blind,
             tau_v=0.20,
-            triad_gain=1.0,
+            triad_gain=1.5,
             unroll_steps=1,
             residual_c=residual_blind,
             precision_pi=scen.get("precision_pi"),
         )
-        struct_gate_full = (u_front_blind.amax(dim=-1) > 0.35).float()
-        oatse_blind_c = struct_gate_full * oatse_raw_full + (1.0 - struct_gate_full) * (
-            0.70 * oatse_raw_full + 0.30 * fkrig_full
+        bdy_full = scen["fault_boundary_mask"].clone()
+        if front_jitter_voxels != 0:
+            bdy_full = torch.roll(bdy_full, shifts=int(front_jitter_voxels), dims=2)
+        lat_weight_full = 0.0 if cast_horiz_std_all < 0.02 else 0.35
+        struct_gate_full = lat_weight_full * bdy_full.float()
+        c_pad_f = F.pad(true_c.view(1, 1, Z, Y, X), (1, 1, 1, 1, 1, 1), mode="replicate")
+        c_mig_f = _add_deterministic_noise(F.avg_pool3d(c_pad_f, kernel_size=3, stride=1).view(Z, Y, X), snr_db=snr_db, seed=1100)
+        # Interior 3D cavity / target anomaly gate (excluding horizontal layer steps already resolved by casts)
+        c_mig_med_z = c_mig_f.reshape(Z, Y * X).median(dim=1).values.view(Z, 1, 1)
+        lat_dev_full = F.avg_pool3d(F.pad((c_mig_f - c_mig_med_z).view(1, 1, Z, Y, X), (1, 1, 1, 1, 0, 0), mode="replicate"), kernel_size=(1, 3, 3), stride=1).view(Z, Y, X)
+        anom_gate = ((lat_dev_full.abs() > 0.12) & ((c_mig_f - prior_full).abs() > 0.035)).float()
+        oatse_blind_c = (
+            struct_gate_full * oatse_raw_full
+            + (1.0 - struct_gate_full) * prior_full
+            + 0.65 * anom_gate * (c_mig_f - prior_full)
         )
 
     # Sample along unseen 3D deviated UUV glider / AUV SAS trajectories

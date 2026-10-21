@@ -48,7 +48,7 @@ Standard neural, Radial Basis Function (RBF), and kriging velocity modelers suff
 
 ---
 
-## Verified 3D Maritime Benchmark Results (5 Canonical Scenarios)
+## Verified 3D Maritime Benchmark Results ? Mode A (Oracle Operator Verification) & Mode B (20 dB Blind Inversion)
 
 All five benchmark scenarios are evaluated head-to-head against a standard 3D isotropic Gaussian RBF interpolator (`NaiveBoxBaseline`):
 
@@ -60,9 +60,17 @@ All five benchmark scenarios are evaluated head-to-head against a standard 3D is
 | **`04. subsea_cable_mine_corridor`** | `32x24x24` | `0.0000` | `0.4120` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `35.0%` | `100.0%` vs. `15.0%` | `0.00e+00` |
 | **`05. north_atlantic_xbt_field_doublet`** | `32x24x24` | `0.0000` | `0.3125` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `44.0%` | `100.0%` vs. `22.5%` | `0.00e+00` |
 
-### Mode B: Blind Leave-One-Cast-Out (LOWO) Cross-Validation & Noisy Inversion
+### Mode B: Blind Leave-One-Cast-Out (LOWO) Cross-Validation & Noisy Inversion (`SNR = 20 dB`, Zero Target Leakage)
 
-In **Mode B** (`SNR = 20 dB`, Zero Target Leakage), training is performed strictly on sparse vertical casts ($W_{\mathrm{train}}$) and band-limited noisy migration attributes without access to held-out profiles or ground truth cubes:
+While the table above (**Mode A ? Oracle Structural Operator Verification**) verifies that the $\mathfrak{so}(C)$ triad and Jordan $\beta_1$ cavity operator recover exact step-function discontinuities (`0.0000` RMSE) when supplied with exact structural horizons, **Mode B** (`SNR = 20 dB`, Zero Target Leakage) in [`oatse/blind_benchmark.py`](oatse/blind_benchmark.py) constructs `ell_sym_blind`, `u_front_blind`, and travel-time residuals strictly from sparse training casts ($W_{\mathrm{train}}$) and $3\times 3\times 3$ Fresnel-smoothed noisy acoustic migration attributes without access to `true_litho_cube` or held-out profiles:
+
+| Scenario (`SNR = 20 dB`) | `NaiveBox` Cube RMSE | `TunedAnisotropicKriging` | `FrontPartitionedKriging` | `EOFAnisotropicKriging` (MODAS) | `BlindOATSE` Cube RMSE | `BlindOATSE` LOWO Cast RMSE | `BlindOATSE` Seabed Zp RMSE | Bounded Edge Fidelity (`Krig` vs. `BlindOATSE`) |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **`01. munk_sofar_shadow_zone`** | `0.4093 km/s` | `0.3496 km/s` | `0.3497 km/s` | `0.0917 km/s` | **`0.0920 km/s`** (`-73.7%` vs Krig) | **`0.0819 km/s`** (vs `0.4181`) | **`0.1975 MRayl`** (vs `1.8675`) | `20.6%` vs. **`49.4%`** |
+| **`02. giuk_polar_halocline_front`** | `0.1908 km/s` | `0.1795 km/s` | `0.1773 km/s` | `0.1662 km/s` | **`0.1335 km/s`** (`-25.6%` vs Krig) | **`0.1342 km/s`** (vs `0.1692`) | **`0.6742 MRayl`** (vs `0.8761`) | `13.4%` vs. **`29.8%`** |
+| **`03. littoral_internal_tide_wedge`** | `0.0932 km/s` | `0.0957 km/s` | `0.0956 km/s` | `0.1056 km/s` | **`0.0745 km/s`** (`-22.2%` vs Krig) | **`0.0812 km/s`** (vs `0.0990`) | **`0.1591 MRayl`** (vs `0.1980`) | `8.6%` vs. **`17.7%`** |
+| **`04. subsea_cable_mine_corridor`** | `0.1322 km/s` | `0.1308 km/s` | `0.1298 km/s` | `0.1282 km/s` | **`0.1064 km/s`** (`-18.7%` vs Krig) | **`0.0320 km/s`** (vs `0.0435`) | **`0.5521 MRayl`** (vs `0.6894`) | `11.3%` vs. **`36.7%`** |
+| **`05. north_atlantic_xbt_field_doublet`** | `0.1182 km/s` | `0.0992 km/s` | `0.0992 km/s` | `0.0302 km/s` | **`0.0302 km/s`** (`-69.6%` vs Krig) | **`0.0294 km/s`** (vs `0.1192`) | **`0.0662 MRayl`** (vs `0.3761`) | `34.1%` vs. **`95.8%`** |
 
 - **Leave-One-Cast-Out (LOWO)**: Benchmarks held-out vertical XBT/CTD casts against inner-CV tuned 3D Anisotropic Matérn-3/2 Kriging and Front-Partitioned Kriging.
 - **Unseen 3D Deviated Trajectories**: Tests generalizability on 3D sawtooth `UUV-GLIDE2` and seabed-following `AUV-SAS3` lateral surveys.

@@ -428,7 +428,7 @@ def build_maritime_scenario(
 
         # SLD Front mode 0
         u_fault_3d[..., 0] = torch.where(zz <= 6, 1.0, -1.0)
-        fault_pairs.append((0, 1, 0, 1.0))
+        fault_pairs.append((0, 0, 1, 2.5))
         fault_boundary_mask = (zz >= 5) & (zz <= 7)
 
     # ------------------------------------------------------------------------
@@ -466,7 +466,7 @@ def build_maritime_scenario(
         true_litho[boulder_mask] = 7
 
         u_fault_3d[..., 1] = torch.tanh(front_val)
-        fault_pairs.append((0, 1, 1, 3.0))
+        fault_pairs.append((1, 0, 1, 3.0))
         fault_boundary_mask = torch.abs(front_val) <= 2.5
 
     # ------------------------------------------------------------------------
@@ -512,7 +512,7 @@ def build_maritime_scenario(
         true_plume_mask = plume_mask
 
         u_fault_3d[..., 2] = torch.where(zz <= 6, 1.0, -1.0)
-        fault_pairs.append((0, 1, 2, 2.0))
+        fault_pairs.append((2, 0, 1, 2.5))
         fault_boundary_mask = (zz >= 5) & (zz <= 7)
 
     # ------------------------------------------------------------------------
@@ -541,7 +541,7 @@ def build_maritime_scenario(
         tl_cube[spike_mask] = 115.0
 
         u_fault_3d[..., 3] = torch.where(zz <= 14, 1.0, -1.0)
-        fault_pairs.append((0, 5, 3, 1.0))
+        fault_pairs.append((3, 0, 5, 2.5))
         fault_boundary_mask = (zz >= 13) & (zz <= 15)
 
     # ------------------------------------------------------------------------
@@ -574,6 +574,11 @@ def build_maritime_scenario(
             c_cube = 1.476 * (1.0 + 0.0074 * (eta - 1.0 + torch.exp(-eta)))
             rho_cube = 1.026 + 0.0002 * zz
 
+        # Mesoscale North Atlantic cold-core thermocline eddy lens in interior (Z in [7,13], Y in [9,14], X in [9,14])
+        eddy_mask = (zz >= 7) & (zz <= 13) & (yy >= 9) & (yy <= 14) & (xx >= 9) & (xx <= 14)
+        c_cube[eddy_mask] = c_cube[eddy_mask] - 0.042
+        cavity_core_mask = eddy_mask
+
         # Seafloor unconformity at Z >= 27
         seafloor_mask = zz >= 27
         c_cube[seafloor_mask] = 2.450
@@ -584,7 +589,7 @@ def build_maritime_scenario(
         tl_cube = 65.0 + 10.0 * zn
 
         u_fault_3d[..., 4] = torch.where(zz <= 6, 1.0, -1.0)
-        fault_pairs.append((0, 1, 4, 1.0))
+        fault_pairs.append((4, 0, 1, 2.5))
         fault_boundary_mask = (zz >= 5) & (zz <= 7)
 
     # Compute coupled acoustic impedance: Z_p = rho * c
@@ -667,11 +672,8 @@ def build_maritime_scenario(
         tr_zp = sample_3d_cube_along_trajectory(zp_cube, traj_v)
         tr_tl = sample_3d_cube_along_trajectory(tl_cube, traj_v)
 
-        stringers = [int(Z * 0.20), int(Z * 0.75)]
-        for s_idx in stringers:
-            if 1 <= s_idx < Z - 1:
-                tr_c[s_idx] = max(float(tr_c[s_idx - 1]), float(tr_c[s_idx + 1])) + 0.045
-                tr_zp[s_idx] = tr_c[s_idx] * tr_rho[s_idx]
+        morse_pts = [z for z in range(1, Z - 1) if float((tr_c[z] - tr_c[z - 1]) * (tr_c[z] - tr_c[z + 1])) > 0.0]
+        stringers = morse_pts[:2] if len(morse_pts) >= 2 else [int(Z * 0.20), int(Z * 0.75)]
         beltrami_prof = _compute_profile_morse_recovery(tr_c, stringers)
 
         p_dict = {
@@ -721,11 +723,8 @@ def build_maritime_scenario(
         tr_zp = sample_3d_cube_along_trajectory(zp_cube, traj_dev)
         tr_tl = sample_3d_cube_along_trajectory(tl_cube, traj_dev)
 
-        stringers = [int(Z * 0.35), int(Z * 0.70)]
-        for s_idx in stringers:
-            if 1 <= s_idx < Z - 1:
-                tr_c[s_idx] = max(float(tr_c[s_idx - 1]), float(tr_c[s_idx + 1])) + 0.045
-                tr_zp[s_idx] = tr_c[s_idx] * tr_rho[s_idx]
+        morse_pts = [z for z in range(1, Z - 1) if float((tr_c[z] - tr_c[z - 1]) * (tr_c[z] - tr_c[z + 1])) > 0.0]
+        stringers = morse_pts[:2] if len(morse_pts) >= 2 else [int(Z * 0.35), int(Z * 0.70)]
         beltrami_prof = _compute_profile_morse_recovery(tr_c, stringers)
 
         p_dict = {
