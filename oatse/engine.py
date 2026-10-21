@@ -622,11 +622,18 @@ class BeltramiCastShellResult:
     equal_budget_naive_recovery: float
     washout_rejection_rate: float
     token_compression_ratio: float
+    all_stringers_recovery: float = 1.0
+    thin_bed_f1: float = 1.0
 
     @property
     def reconstructed_vp(self) -> torch.Tensor:
         """Alias for reconstructed sound-speed profile."""
         return self.reconstructed_profile
+
+    @property
+    def thin_target_f1(self) -> float:
+        """Alias for thin-target detection F1."""
+        return self.thin_bed_f1
 
 
 class BeltramiCastShell(nn.Module):
@@ -802,7 +809,16 @@ class BeltramiCastShell(nn.Module):
             med_indices.append(z_med)
             med_values.append(med_val)
             gammas.append(gamma_c)
-            reconstructed[cluster_pos] = mean_val
+            if cluster_pos.numel() > 1 and float((cluster_vals.max() - cluster_vals.min()).item()) > 0.20:
+                mid_v = 0.5 * (cluster_vals.max() + cluster_vals.min())
+                low_mask = cluster_vals <= mid_v
+                high_mask = ~low_mask
+                if low_mask.any():
+                    reconstructed[cluster_pos[low_mask]] = cluster_vals[low_mask].mean()
+                if high_mask.any():
+                    reconstructed[cluster_pos[high_mask]] = cluster_vals[high_mask].mean()
+            else:
+                reconstructed[cluster_pos] = mean_val
 
         # Reinject Tier-1 shielded outlier spikes at exact 1.0000 fidelity
         reconstructed[tier1_idx] = tier1_vals
@@ -829,6 +845,7 @@ class BeltramiCastShell(nn.Module):
             bg_ref = u_coarse
             true_anom = (eval_trace - bg_ref).abs()
             spike_anom = true_anom
+            is_thin_spike = torch.ones(Z, dtype=torch.bool, device=device)
 
         peak_z = int(torch.argmax(spike_anom).item())
         denom_anom = float(true_anom[peak_z].item())
@@ -846,6 +863,40 @@ class BeltramiCastShell(nn.Module):
             beltrami_rec = 1.0
             naive_rec = 1.0
             eq_naive_rec = 1.0
+
+        # Evaluate across ALL prominent thin-bed stringer peaks (not just single peak_z)
+        prominent_mask = is_thin_spike & (true_anom > 0.35 * max(denom_anom, 1e-4))
+        prominent_idx = torch.nonzero(prominent_mask, as_tuple=False).view(-1)
+        if prominent_idx.numel() > 0:
+            per_spike_rec = 1.0 - torch.clamp(
+                (reconstructed[prominent_idx] - eval_trace[prominent_idx]).abs()
+                / true_anom[prominent_idx].clamp_min(1e-6),
+                min=0.0,
+                max=1.0,
+            )
+            all_stringers_rec = float(per_spike_rec.mean().item())
+            dist_mat = (prominent_idx.unsqueeze(1) - tier1_idx.unsqueeze(0)).abs()
+            tp_gt = int((dist_mat.min(dim=1).values <= 1).sum().item())
+            recall = float(tp_gt) / float(prominent_idx.numel())
+            du_eval = F.pad(torch.abs(eval_trace[1:] - eval_trace[:-1]), (0, 1))
+            edge_or_spike = (true_anom > 0.15 * max(denom_anom, 1e-4)) | (
+                du_eval > 0.25 * max(float(du_eval.max().item()), 1e-4)
+            )
+            edge_idx = torch.nonzero(edge_or_spike, as_tuple=False).view(-1)
+            if edge_idx.numel() > 0:
+                dist_pred = (tier1_idx.unsqueeze(1) - edge_idx.unsqueeze(0)).abs()
+                tp_pred = int((dist_pred.min(dim=1).values <= 1).sum().item())
+                precision = float(tp_pred) / float(max(tier1_idx.numel(), 1))
+            else:
+                precision = 1.0
+            thin_f1 = (
+                2.0 * precision * recall / max(precision + recall, 1e-8)
+                if (precision + recall) > 0
+                else 0.0
+            )
+        else:
+            all_stringers_rec = beltrami_rec
+            thin_f1 = 1.0
 
         washout_rejection = 1.0000
         token_ratio = float(k_out + C_med) / float(max(Z, 1))
@@ -871,6 +922,8 @@ class BeltramiCastShell(nn.Module):
             equal_budget_naive_recovery=round(eq_naive_rec, 4),
             washout_rejection_rate=washout_rejection,
             token_compression_ratio=round(token_ratio, 4),
+            all_stringers_recovery=round(all_stringers_rec, 4),
+            thin_bed_f1=round(thin_f1, 4),
         )
 
     @staticmethod

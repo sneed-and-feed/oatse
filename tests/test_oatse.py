@@ -468,11 +468,11 @@ def test_suite14_oatse_model_triad_forward_and_scenario_comparison():
 
 
 def test_suite15_studio_v020_serialization_and_ray_fan():
-    """Verify serialize_evaluation_payload includes all 18 cubes, Snell ray-fan, fault planes, and Beltrami curves."""
+    """Verify serialize_evaluation_payload includes all 19 cubes, Snell ray-fan reflection off bathymetry, and Beltrami curves."""
     from oatse.studio import serialize_evaluation_payload
 
-    payload = serialize_evaluation_payload("munk_sofar_shadow_zone", grid_shape=(16, 12, 12))
-    assert payload["scenario_name"] == "munk_sofar_shadow_zone"
+    payload = serialize_evaluation_payload("littoral_internal_tide_wedge", grid_shape=(16, 12, 12))
+    assert payload["scenario_name"] == "littoral_internal_tide_wedge"
     assert payload["grid_shape"] == [16, 12, 12]
 
     expected_cubes = {
@@ -490,6 +490,7 @@ def test_suite15_studio_v020_serialization_and_ray_fan():
         "oatse_curl_salience",
         "err_oatse",
         "err_krig",
+        "blind_gain",
         "precision_pi",
         "jordan_cavity",
         "timelapse_nope_plume",
@@ -497,13 +498,19 @@ def test_suite15_studio_v020_serialization_and_ray_fan():
     }
     assert expected_cubes.issubset(set(payload["cubes"].keys()))
 
-    # Verify Snell acoustic eigenray fan
+    # Verify Snell acoustic eigenray fan reflects off shoaling seabed instead of entering solid rock
     ray_fan = payload["acoustic_ray_fan"]
+    c_cube = np.asarray(payload["cubes"]["true_c_vp"])
     assert len(ray_fan) == 6
     for ray in ray_fan:
         assert len(ray["traj_z"]) > 10
         assert len(ray["traj_y"]) == len(ray["traj_z"])
         assert len(ray["traj_x"]) == len(ray["traj_z"])
+        for rz, ry, rx in zip(ray["traj_z"], ray["traj_y"], ray["traj_x"]):
+            iz = int(np.clip(round(rz), 0, 15))
+            iy = int(np.clip(round(ry), 0, 11))
+            ix = int(np.clip(round(rx), 0, 11))
+            assert c_cube[iz, iy, ix] < 1.65, f"Ray {ray['name']} penetrated solid seabed at ({iz},{iy},{ix}): c={c_cube[iz,iy,ix]}"
 
     # Verify fault planes metadata and Beltrami reconstructed curves
     assert len(payload["fault_planes_meta"]) >= 1
@@ -513,6 +520,7 @@ def test_suite15_studio_v020_serialization_and_ray_fan():
         assert len(p["reconstructed_vp"]) == 16
         assert len(p["naive_pooled_vp"]) == 16
         assert len(p["salience"]) == 16
+        assert p["beltrami_spike_recovery"] == pytest.approx(1.0, abs=1e-4)
 
 
 def test_suite16_portable_studio_html_bundler_and_offline_integrity():
@@ -536,15 +544,29 @@ def test_suite16_portable_studio_html_bundler_and_offline_integrity():
         "sliderVE",
         "sliderOpacity",
         "selectCutoutMode",
+        "selectCutoutOctant",
+        "selectColormap",
+        "chkInvertCmap",
+        "btnZDec",
+        "btnZInc",
+        "btnYDec",
+        "btnYInc",
+        "btnXDec",
+        "btnXInc",
         "btnFlipKrig",
         "btnFlipModas",
         "btnFlipTruth",
         "chkRayFan",
         "chkFrontPlanes",
         "chkWellBadges",
+        "chk2DFaultOverlay",
         "btnCamSofar",
+        "btnCamFocusWell",
         "btnAutoOrbit",
+        "btnCopyDeepLink",
         "btnExportPNG",
+        "btnHelpModal",
+        "btnExpandTelemetry",
         "sliderTriadGain",
         "sliderTauV",
     ]:
@@ -600,5 +622,63 @@ def test_suite18_temporal_continuity_splitter_m2_tide_vs_target():
     res_zero = splitter.decompose_4d_sweeps(zero_sweeps)
     assert float(res_zero["h_clock"].abs().max().item()) == 0.0
     assert bool(res_zero["clock_mask"].any().item()) is False
+
+
+def test_suite19_all_scenarios_beltrami_spike_recovery_and_regime_aware_noise():
+    """Verify 100% Beltrami spike recovery across all 5 scenarios (vertical & deviated) and regime-aware water noise."""
+    from oatse.blind_benchmark import _add_deterministic_noise
+    from oatse.scenarios import SCENARIO_DESCRIPTIONS, evaluate_scenario_comparison
+
+    for scen_name in SCENARIO_DESCRIPTIONS:
+        comp = evaluate_scenario_comparison(scen_name, grid_shape=(32, 24, 24))
+        m = comp["metrics"]
+        assert m["beltrami_spike_recovery"] == pytest.approx(1.0, abs=1e-5), f"{scen_name} vertical spike recovery < 1.0"
+        assert m["deviated_well_spike_recovery"] == pytest.approx(1.0, abs=1e-5), f"{scen_name} deviated spike recovery < 1.0"
+        assert m["all_stringers_beltrami_recovery"] == pytest.approx(1.0, abs=1e-5), f"{scen_name} all-stringers recovery < 1.0"
+        assert m["thin_bed_detection_f1"] == pytest.approx(1.0, abs=1e-5), f"{scen_name} thin_bed_f1 < 1.0"
+        assert m["naive_spike_recovery"] < 0.25
+
+        # Verify regime-aware noise scaling does not pollute water column with basalt-scale variance
+        c_true = comp["scenario"]["sound_speed_c"]
+        c_noisy = _add_deterministic_noise(c_true, snr_db=20.0, seed=101)
+        water_mask = c_true <= 1.62
+        water_noise_std = float((c_noisy[water_mask] - c_true[water_mask]).std().item())
+        assert water_noise_std < 0.010, f"Water noise std {water_noise_std} inflated by seabed rock variance"
+
+
+def test_suite20_flask_studio_server_endpoints():
+    """Verify Flask studio application endpoints via test_client()."""
+    from oatse.studio import HAS_FLASK, create_studio_app
+
+    if not HAS_FLASK:
+        pytest.skip("Flask not installed")
+
+    app = create_studio_app(default_grid_shape=(16, 12, 12))
+    client = app.test_client()
+
+    r_root = client.get("/")
+    assert r_root.status_code == 200
+    assert b"OATSE Studio v0.2.0" in r_root.data
+
+    r_health = client.get("/api/health")
+    assert r_health.status_code == 200
+    assert r_health.get_json()["version"] == "0.2.0"
+
+    r_scens = client.get("/api/scenarios")
+    assert r_scens.status_code == 200
+    assert r_scens.get_json()["count"] == 5
+
+    r_scen = client.get("/api/scenario/giuk_polar_halocline_front")
+    assert r_scen.status_code == 200
+    assert r_scen.get_json()["scenario_name"] == "giuk_polar_halocline_front"
+
+    r_eval = client.post("/api/evaluate", json={"scenario_name": "subsea_cable_mine_corridor"})
+    assert r_eval.status_code == 200
+    assert r_eval.get_json()["scenario_name"] == "subsea_cable_mine_corridor"
+
+    r_up = client.post("/api/upload", json={"filename": "test.las", "content": "~A\n0.0 1.50\n50.0 1.49\n"})
+    assert r_up.status_code == 200
+    assert r_up.get_json()["status"] == "ok"
+
 
 

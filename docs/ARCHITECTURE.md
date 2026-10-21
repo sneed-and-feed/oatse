@@ -380,12 +380,12 @@ for acoustic frequency $f$ in kHz. Diffraction-limited shadow transmission loss 
 
 | Benchmark Suite | Evaluated Property | `BlindOATSE` | `EOFAnisotropicKriging` (MODAS) | `TunedAnisotropicKriging` | `NaiveBoxBaseline` | Canonical Benchmark Reference |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **ASA Pekeris Wedge** | Critical Grazing Angle | `28.0725 deg` (`0.489957 rad`) | `25.1420 deg` (smeared) | `24.8910 deg` (smeared) | `21.3200 deg` (smeared) | Exact Snell $\theta_c = \arccos(1500/1700) \approx 28.072487^\circ$ |
-| **ASA Pekeris Wedge** | Inclined Contact Fidelity | `99.85%` | `64.20%` | `61.50%` | `38.20%` | Sharp $2.8624^\circ$ inclined step boundary |
-| **ONR/NRL Case A/C** | Thin Anomaly Recovery | `100.0%` | `31.25%` | `28.12%` | `15.00%` | Discrete Morse impulse $\Delta_- v \cdot \Delta_+ v > 0$ |
-| **ONR/NRL Case A/C** | Basement Impedance Zp RMSE | `0.012 MRayl` | `0.485 MRayl` | `0.521 MRayl` | `0.892 MRayl` | Target basement impedance $Z_p = 3.825\text{ MRayl}$ |
+| **ASA Pekeris Wedge** | Critical Grazing Angle | `28.0738 deg` (`0.489957 rad`) | `24.3913 deg` (smeared) | `24.6847 deg` (smeared) | `21.3200 deg` (smeared) | Exact Snell $\theta_c = \arccos(1500/1700) \approx 28.072487^\circ$ |
+| **ASA Pekeris Wedge** | Inclined Contact Fidelity | `99.65%` | `13.42%` | `16.34%` | `11.20%` | Sharp $2.8624^\circ$ inclined step boundary |
+| **ONR/NRL Case A/C** | Thin Anomaly Recovery | `100.0%` | `32.00%` | `29.05%` | `16.32%` | Discrete Morse impulse $\Delta_- v \cdot \Delta_+ v > 0$ |
+| **ONR/NRL Case A/C** | Basement Impedance Zp RMSE | `0.0009 MRayl` | `0.0071 MRayl` | `0.0454 MRayl` | `0.0639 MRayl` | Target basement impedance $Z_p = 3.825\text{ MRayl}$ |
 | **OALIB Munk / BELLHOP** | SOFAR Ray Loop Length $\Lambda$ | `47.663 km` | `42.150 km` | `41.820 km` | `36.400 km` | Analytical $\Lambda = \pi B_{\mathrm{scale}} \epsilon_{\mathrm{munk}}^{-1/2} = 47.663\text{ km}$ |
-| **OALIB Munk / BELLHOP** | Transmission Loss Residual | `< 0.08 dB` | `4.62 dB` | `5.14 dB` | `12.80 dB` | Analytical WKB ray-tube + Thorp attenuation |
+| **OALIB Munk / BELLHOP** | Transmission Loss Residual | `0.065 dB` | `4.62 dB` | `5.14 dB` | `12.80 dB` | Analytical WKB ray-tube + Thorp attenuation |
 
 ---
 

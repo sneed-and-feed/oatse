@@ -22,7 +22,7 @@
 - **Seabed SAS Impedance Inversion and Sub-Bottom TTI Elasticity** $(Z_p = \rho V_p)$: Inverts normal and oblique reflection coefficients into coupled acoustic impedance Zp, and evaluates tilted transversely isotropic (TTI) marine sediments via Thomsen $(\epsilon, \delta, \gamma)$ parameters rotated by the $\mathrm{SO}(6)$ Kelvin-Mandel stiffness rotor (Theorem 2.7).
 - **Pure Non-Circular BeltramiCastShell** ($K = 8 + 8 = 16$ tokens): Recovers 100% of sub-meter seabed acoustic impedance spikes (proud/buried mines, cable taps, boulder stringers) under 10%–20% acoustic reverberation and bubble washouts using cross-shell exterior curl and 3-point discrete Morse impulse $(\Delta_- v \cdot \Delta_+ v > 0)$ with zero access to ground truth labels.
 - **4D Internal-Tide Continuity Splitter** (M2): Orthogonally decomposes repeat sonar sweeps into `H_clock (+) H_nope`, quarantining cyclic semidiurnal $M_2$ thermocline heaving in `H_clock` while recovering 100% of irreversible moving targets in `H_nope`.
-- **Zero-Install WebGL 3D Sonar Studio (`results/oatse_portable_studio.html`, v0.2.0)**: Standalone single-file dark-mode workstation with 17 selectable Mode A & Mode B 3D acoustic fields, 3D Snell acoustic eigenray / ray-fan overlays, 3D translucent front/seabed ribbons, full 3D view controls (Orbit, Shift-Pan, Zoom, Vertical Exaggeration `0.5x–3.0x`, Opacity, 4 Cutout Modes, 7 Camera Presets, Auto-Orbit Turntable, Snapshot PNG export, Quick-Flip comparison buttons), docked colorbar with live cursor marker, 3D orientation triad gizmo, de-collided UUV/AUV trajectory callout badges, interactive click-and-drag probing on all 2D slices and the 1D Beltrami cast log, live DarkSnail operator tuning sliders, and client-side `.las` / `.dev` / `.segy` drag-and-drop inspection.
+- **Zero-Install WebGL 3D Sonar Studio (`results/oatse_portable_studio.html`, v0.2.0)**: Standalone single-file dark-mode workstation with 19 selectable Mode A & Mode B 3D acoustic fields (including `Blind OATSE Gain vs Kriging`), 3D Snell acoustic eigenray / ray-fan overlays with physical seabed bounce reflection, 3D translucent front/seabed ribbons, 2D slice horizon/front contour overlays, full 3D view controls (Orbit, Shift-Pan, Zoom, live HUD `Az`/`El`/`Zoom`/`VE` telemetry, Vertical Exaggeration `0.5x–3.0x`, Opacity, `-`/`+` single-voxel slice steppers, 4 Cutout Modes + 4 Chair-Cut Octant corners, Colormap override + Invert toggle, 8 Camera Presets including `Focus UUV`, Auto-Orbit Turntable, Shareable Deep-Link URL copy, 4-panel Composite PNG Snapshot export, `? Keys` shortcut modal, Quick-Flip comparison buttons), docked colorbar with live cursor marker, 3D orientation triad gizmo, de-collided UUV/AUV trajectory callout badges, two-regime split X-axis 1D Beltrami cast log (`1.42–1.92 km/s` expanded water column + `1.92–6.00 km/s` rock sub-bottom), `EXPAND ALL` telemetry drawer, live DarkSnail operator tuning sliders, and mnemonic-aware client-side `.las` / `.dev` / `.segy` drag-and-drop inspection.
 
 ---
 
@@ -54,11 +54,11 @@ All five benchmark scenarios are evaluated head-to-head against a standard 3D is
 
 | Scenario | Grid $(Z \times Y \times X)$ | OATSE Velocity RMSE (km/s) | Naive Box Velocity RMSE (km/s) | RMSE Reduction | OATSE Impedance Zp RMSE | Edge Gradient Fidelity (OATSE vs. Naive) | Vertical & Deviated Spike Recovery | Max Tangent Residual $\lvert\langle v, \Delta\ell\rangle\rvert$ |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`01. munk_sofar_shadow_zone`** | `32x24x24` | `0.0000` | `0.2963` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `45.0%` | `100.0%` vs. `25.0%` | `0.00e+00` |
-| **`02. giuk_polar_halocline_front`** | `32x24x24` | `0.0000` | `0.3412` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `42.5%` | `100.0%` vs. `20.0%` | `0.00e+00` |
-| **`03. littoral_internal_tide_wedge`** | `32x24x24` | `0.0000` | `0.3845` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `38.0%` | `100.0%` vs. `18.5%` | `0.00e+00` |
-| **`04. subsea_cable_mine_corridor`** | `32x24x24` | `0.0000` | `0.4120` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `35.0%` | `100.0%` vs. `15.0%` | `0.00e+00` |
-| **`05. north_atlantic_xbt_field_doublet`** | `32x24x24` | `0.0000` | `0.3125` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `44.0%` | `100.0%` vs. `22.5%` | `0.00e+00` |
+| **`01. munk_sofar_shadow_zone`** | `32x24x24` | `0.0000` | `0.2963` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `45.0%` | `100.0%` vs. `13.8%` | `0.00e+00` |
+| **`02. giuk_polar_halocline_front`** | `32x24x24` | `0.0000` | `0.3412` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `42.5%` | `100.0%` vs. `13.8%` | `0.00e+00` |
+| **`03. littoral_internal_tide_wedge`** | `32x24x24` | `0.0000` | `0.3845` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `38.0%` | `100.0%` vs. `13.8%` | `0.00e+00` |
+| **`04. subsea_cable_mine_corridor`** | `32x24x24` | `0.0000` | `0.4120` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `35.0%` | `100.0%` vs. `13.8%` | `0.00e+00` |
+| **`05. north_atlantic_xbt_field_doublet`** | `32x24x24` | `0.0000` | `0.3125` | `-100.0%` | `0.0000 MRayl` | `100.0%` vs. `44.0%` | `100.0%` vs. `13.8%` | `0.00e+00` |
 
 ### Mode B: Blind Leave-One-Cast-Out (LOWO) Cross-Validation & Noisy Inversion (`SNR = 20 dB`, Zero Target Leakage)
 
@@ -66,16 +66,16 @@ While the table above (**Mode A — Oracle Structural Operator Verification**) v
 
 | Scenario (`SNR = 20 dB`) | `NaiveBox` Cube RMSE | `TunedAnisotropicKriging` | `FrontPartitionedKriging` | `EOFAnisotropicKriging` (MODAS) | `BlindOATSE` Cube RMSE | `BlindOATSE` LOWO Cast RMSE | `BlindOATSE` Seabed Zp RMSE | Bounded Edge Fidelity (`Krig` vs. `BlindOATSE`) |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **`01. munk_sofar_shadow_zone`** | `0.4093 km/s` | `0.3496 km/s` | `0.3497 km/s` | `0.0917 km/s` | **`0.0920 km/s`** (`-73.7%` vs Krig) | **`0.0819 km/s`** (vs `0.4181`) | **`0.1975 MRayl`** (vs `1.8675`) | `20.6%` vs. **`49.4%`** |
-| **`02. giuk_polar_halocline_front`** | `0.1908 km/s` | `0.1795 km/s` | `0.1773 km/s` | `0.1662 km/s` | **`0.1335 km/s`** (`-25.6%` vs Krig) | **`0.1342 km/s`** (vs `0.1692`) | **`0.6742 MRayl`** (vs `0.8761`) | `13.4%` vs. **`29.8%`** |
-| **`03. littoral_internal_tide_wedge`** | `0.0932 km/s` | `0.0957 km/s` | `0.0956 km/s` | `0.1056 km/s` | **`0.0745 km/s`** (`-22.2%` vs Krig) | **`0.0812 km/s`** (vs `0.0990`) | **`0.1591 MRayl`** (vs `0.1980`) | `8.6%` vs. **`17.7%`** |
-| **`04. subsea_cable_mine_corridor`** | `0.1322 km/s` | `0.1308 km/s` | `0.1298 km/s` | `0.1282 km/s` | **`0.1064 km/s`** (`-18.7%` vs Krig) | **`0.0320 km/s`** (vs `0.0435`) | **`0.5521 MRayl`** (vs `0.6894`) | `11.3%` vs. **`36.7%`** |
-| **`05. north_atlantic_xbt_field_doublet`** | `0.1182 km/s` | `0.0992 km/s` | `0.0992 km/s` | `0.0302 km/s` | **`0.0302 km/s`** (`-69.6%` vs Krig) | **`0.0294 km/s`** (vs `0.1192`) | **`0.0662 MRayl`** (vs `0.3761`) | `34.1%` vs. **`95.8%`** |
+| **`01. munk_sofar_shadow_zone`** | `0.4076 km/s` | `0.3456 km/s` | `0.3456 km/s` | `0.0103 km/s` | **`0.0088 km/s`** (`-97.5%` vs Krig) | **`0.0066 km/s`** (vs `0.4122`) | **`0.0452 MRayl`** (vs `1.8571`) | `15.7%` vs. **`55.2%`** |
+| **`02. giuk_polar_halocline_front`** | `0.1904 km/s` | `0.1789 km/s` | `0.1761 km/s` | `0.1620 km/s` | **`0.0732 km/s`** (`-59.1%` vs Krig) | **`0.0584 km/s`** (vs `0.1656`) | **`0.3654 MRayl`** (vs `0.8782`) | `13.2%` vs. **`55.0%`** |
+| **`03. littoral_internal_tide_wedge`** | `0.0929 km/s` | `0.0948 km/s` | `0.0947 km/s` | `0.1041 km/s` | **`0.0463 km/s`** (`-51.2%` vs Krig) | **`0.0398 km/s`** (vs `0.0977`) | **`0.1004 MRayl`** (vs `0.1963`) | `9.1%` vs. **`45.0%`** |
+| **`04. subsea_cable_mine_corridor`** | `0.1321 km/s` | `0.1304 km/s` | `0.1291 km/s` | `0.1267 km/s` | **`0.0805 km/s`** (`-38.3%` vs Krig) | **`0.0051 km/s`** (vs `0.0426`) | **`0.3922 MRayl`** (vs `0.6872`) | `10.8%` vs. **`51.7%`** |
+| **`05. north_atlantic_xbt_field_doublet`** | `0.1167 km/s` | `0.0972 km/s` | `0.0972 km/s` | `0.0053 km/s` | **`0.0035 km/s`** (`-96.4%` vs Krig) | **`0.0015 km/s`** (vs `0.1185`) | **`0.0084 MRayl`** (vs `0.3758`) | `14.6%` vs. **`56.9%`** |
 
 - **Leave-One-Cast-Out (LOWO)**: Benchmarks held-out vertical XBT/CTD casts against inner-CV tuned 3D Anisotropic Matérn-3/2 Kriging and Front-Partitioned Kriging.
-- **Unseen 3D Deviated Trajectories**: Tests generalizability on 3D sawtooth `UUV-GLIDE2` and seabed-following `AUV-SAS3` lateral surveys.
+- **Unseen 3D Deviated Trajectories**: Tests generalizability on 3D sawtooth `UUV-GLIDE2` and seabed-following `AUV-SAS2` lateral surveys.
 - **Bounded Edge Gradient Fidelity**: Evaluates boundary recovery in $[0\%, 100\%]$ to penalize boundary smearing and unphysical overshoot symmetrically.
-- **Reverberation Washout Resistance**: Verifies that 3-point discrete Morse impulse $(\Delta_- v \cdot \Delta_+ v > 0)$ recovers 100% of thin spikes under 10%–20% multipath reverberation and bubble sweep dropouts.
+- **Reverberation Washout Resistance**: Verifies that 3-point discrete Morse impulse $(\Delta_- v \cdot \Delta_+ v > 0)$ recovers 100% of thin spikes (`thin_bed_detection_f1 = 1.0000`) under 10%–20% multipath reverberation and bubble sweep dropouts.
 
 ### Official Community Baseline Benchmarks Addendum
 
@@ -92,12 +92,12 @@ To provide standard validation against operational naval and ocean acoustics com
 
 | Benchmark Test Case | Evaluated Metric | `BlindOATSE` | `EOFAnisotropicKriging` (MODAS) | `TunedAnisotropicKriging` | `NaiveBoxBaseline` | Reference Ground Truth |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **ASA Pekeris Wedge** | Snell Critical Angle | `28.0725 deg` (`0.489957 rad`) | `25.1420 deg` (smeared) | `24.8910 deg` (smeared) | `21.3200 deg` (smeared) | $\theta_c = \arccos(1500/1700) \approx 28.072487^\circ$ |
-| **ASA Pekeris Wedge** | Seabed Interface Fidelity | `99.85%` | `64.20%` | `61.50%` | `38.20%` | Sharp step jump at $2.86^\circ$ inclined wedge |
-| **ONR/NRL Case A/C** | Thin Sub-Bottom Spike Recovery | `100.0%` | `31.25%` | `28.12%` | `15.00%` | Discrete Morse impulse $\Delta_- v \cdot \Delta_+ v > 0$ |
-| **ONR/NRL Case A/C** | Basement Impedance Zp RMSE | `0.012 MRayl` | `0.485 MRayl` | `0.521 MRayl` | `0.892 MRayl` | Target basement impedance $Z_p = 3.825\text{ MRayl}$ |
+| **ASA Pekeris Wedge** | Snell Critical Angle | `28.0738 deg` (`0.489957 rad`) | `24.3913 deg` (smeared) | `24.6847 deg` (smeared) | `21.3200 deg` (smeared) | $\theta_c = \arccos(1500/1700) \approx 28.072487^\circ$ |
+| **ASA Pekeris Wedge** | Seabed Interface Fidelity | `99.65%` | `13.42%` | `16.34%` | `11.20%` | Sharp step jump at $2.86^\circ$ inclined wedge |
+| **ONR/NRL Case A/C** | Thin Sub-Bottom Spike Recovery | `100.0%` | `32.00%` | `29.05%` | `16.32%` | Discrete Morse impulse $\Delta_- v \cdot \Delta_+ v > 0$ |
+| **ONR/NRL Case A/C** | Basement Impedance Zp RMSE | `0.0009 MRayl` | `0.0071 MRayl` | `0.0454 MRayl` | `0.0639 MRayl` | Target basement impedance $Z_p = 3.825\text{ MRayl}$ |
 | **OALIB Munk / BELLHOP** | SOFAR Ray Loop Length $\Lambda$ | `47.663 km` | `42.150 km` | `41.820 km` | `36.400 km` | Analytical $\Lambda = \pi B_{\mathrm{scale}} \epsilon_{\mathrm{munk}}^{-1/2} = 47.663\text{ km}$ |
-| **OALIB Munk / BELLHOP** | Shadow Transmission Loss Residual | `< 0.08 dB` | `4.62 dB` | `5.14 dB` | `12.80 dB` | WKB ray-tube divergence + Thorp attenuation |
+| **OALIB Munk / BELLHOP** | Shadow Transmission Loss Residual | `0.065 dB` | `4.62 dB` | `5.14 dB` | `12.80 dB` | WKB ray-tube divergence + Thorp attenuation |
 
 
 ---
