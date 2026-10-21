@@ -1,4 +1,4 @@
-name: OATSE Cross-Platform CI & Pre-Packaged Release
+name: Cross-Platform CI & Pre-Packaged Binary Release
 
 on:
   push:
@@ -13,27 +13,30 @@ permissions:
 
 jobs:
   test-matrix:
-    name: Pytest, Math Audit & Peak Heap (${{ matrix.os }}, Py${{ matrix.python-version }})
+    name: Pytest, Math Audit & Peak Heap (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: ["3.11", "3.12"]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: "3.12"
           cache: "pip"
 
-      - name: Install dependencies
+      - name: Install CPU PyTorch & OATSE dependencies
         run: |
-          python -m pip install --upgrade pip setuptools wheel build
-          pip install -e ".[dev]"
+          python -m pip install --upgrade pip
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            pip install -e ".[dev]"
+          else
+            pip install --extra-index-url https://download.pytorch.org/whl/cpu -e ".[dev]"
+          fi
         shell: bash
 
       - name: Run GFM / KaTeX Math Compliance Audit
@@ -56,10 +59,23 @@ jobs:
         run: python scripts/evaluate_oatse.py
         shell: bash
 
-  build-artifacts:
-    name: Build Wheels, SDist & Verify Portable HTML5 Studio
+  build-binaries:
+    name: Build Standalone Binary (${{ matrix.target_name }})
     needs: test-matrix
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target_name: oatse-windows-x86_64
+            ext: ".exe"
+          - os: macos-latest
+            target_name: oatse-macos-arm64
+            ext: ""
+          - os: ubuntu-latest
+            target_name: oatse-linux-x86_64
+            ext: ""
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -70,42 +86,60 @@ jobs:
           python-version: "3.12"
           cache: "pip"
 
-      - name: Install build tooling
+      - name: Install OATSE, Build Tooling & PyInstaller
         run: |
           python -m pip install --upgrade pip build
-          pip install -e ".[dev]"
+          if [ "${{ runner.os }}" = "macOS" ]; then
+            pip install -e . pyinstaller
+          else
+            pip install --extra-index-url https://download.pytorch.org/whl/cpu -e . pyinstaller
+          fi
+        shell: bash
 
-      - name: Build Wheel & Source Distribution
-        run: python -m build
-
-      - name: Verify Portable HTML5 Studio Exists
+      - name: Package Single-File Executable & Portable HTML5 Studio
         run: |
-          test -f results/oatse_portable_studio.html
-          ls -lh results/oatse_portable_studio.html
+          python -m PyInstaller --noconfirm --clean --onefile \
+            --name "${{ matrix.target_name }}" \
+            --add-data "data/noaa_xbt:data/noaa_xbt" \
+            oatse/__main__.py
+          if [ "${{ matrix.os }}" = "ubuntu-latest" ]; then
+            python -m oatse export-studio --output-dir dist
+            python -m build
+          fi
+        shell: bash
 
-      - name: Upload Package Artifacts
+      - name: Smoke-Test Packaged Binary
+        run: |
+          ./dist/${{ matrix.target_name }}${{ matrix.ext }} scenarios list
+          ./dist/${{ matrix.target_name }}${{ matrix.ext }} scenarios inspect --scenario munk_sofar_shadow_zone
+        shell: bash
+
+      - name: Upload Binary Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: oatse-packages
-          path: |
-            dist/*
-            results/oatse_portable_studio.html
+          name: ${{ matrix.target_name }}
+          path: dist/*
 
   publish-release:
     name: Publish GitHub Release Assets
-    needs: build-artifacts
+    needs: build-binaries
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - name: Download Built Artifacts
+      - name: Download All Built Artifacts
         uses: actions/download-artifact@v4
         with:
-          name: oatse-packages
           path: release-assets
+          merge-multiple: true
 
-      - name: Publish Release Assets to GitHub Release
+      - name: Publish Pre-Packaged Binaries to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            release-assets/*
+            release-assets/oatse-windows-x86_64.exe
+            release-assets/oatse-macos-arm64
+            release-assets/oatse-linux-x86_64
+            release-assets/oatse_portable_studio.html
+            release-assets/*.whl
+            release-assets/*.tar.gz
           generate_release_notes: true

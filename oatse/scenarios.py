@@ -550,6 +550,10 @@ def build_maritime_scenario(
     else:
         # Load from committed data/noaa_xbt/north_atlantic_sofar.las if present
         data_las_path = Path("data/noaa_xbt/north_atlantic_sofar.las")
+        if not data_las_path.exists():
+            import sys
+            base_dir = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent.parent))
+            data_las_path = base_dir / "data" / "noaa_xbt" / "north_atlantic_sofar.las"
         if data_las_path.exists():
             las_rec = read_las2_file(data_las_path, grid_shape=grid_shape)
             z_prof = las_rec.trajectory.z_vox
