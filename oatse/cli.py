@@ -286,7 +286,7 @@ def main(argv: Sequence[str] | None = None) -> int:
 
     # 4. export-studio
     p_studio = subparsers.add_parser("export-studio", help="Export Portable WebGL 3D Sonar Studio")
-    p_studio.add_argument("--output-dir", "-o", default="results", help="Output directory")
+    p_studio.add_argument("--output-dir", "-o", default="studio", help="Output directory")
 
     # 5. serve
     p_serve = subparsers.add_parser("serve", help="Start interactive OATSE 3D Studio server")

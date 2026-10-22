@@ -392,7 +392,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       --font-mono: "SFMono-Regular", "Cascadia Code", "Consolas", "Courier New", monospace;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: thin; scrollbar-color: #243b61 #060b14; }
     body {
       font-family: var(--font-sans);
       background: var(--bg-root);
@@ -405,15 +405,16 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       user-select: none;
     }
     header {
-      height: 46px;
+      height: 44px;
       background: linear-gradient(90deg, #060b16 0%, #0d182e 55%, #070d1b 100%);
       border-bottom: 1px solid var(--border);
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 0 14px;
+      padding: 0 12px;
       flex-shrink: 0;
       position: relative;
+      gap: 8px;
     }
     header::after {
       content: "";
@@ -424,10 +425,10 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       height: 1px;
       background: linear-gradient(90deg, var(--accent-cyan), var(--accent-blue), transparent);
     }
-    .brand { display: flex; align-items: center; gap: 10px; }
+    .brand { display: flex; align-items: center; gap: 8px; min-width: 0; }
     .brand-logo {
-      width: 28px;
-      height: 28px;
+      width: 26px;
+      height: 26px;
       border-radius: 3px;
       background: rgba(0, 242, 212, 0.12);
       border: 1px solid var(--accent-cyan);
@@ -440,22 +441,33 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       color: var(--accent-cyan);
       font-size: 11px;
       letter-spacing: 0.5px;
+      flex-shrink: 0;
     }
-    .brand-title-wrap { display: flex; flex-direction: column; line-height: 1.15; }
+    .brand-title-wrap { display: flex; flex-direction: column; line-height: 1.15; min-width: 0; }
     .brand-title {
       font-family: var(--font-mono);
-      font-size: 12.5px;
+      font-size: 11.5px;
       font-weight: 700;
       color: var(--text-main);
       text-transform: uppercase;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
-    .brand-sub { font-family: var(--font-mono); font-size: 9.5px; color: var(--text-muted); }
-    .header-badges { display: flex; align-items: center; gap: 6px; }
-    .pill {
-      font-size: 10px;
+    .brand-sub {
       font-family: var(--font-mono);
-      padding: 3px 7px;
+      font-size: 9px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .header-badges { display: flex; align-items: center; gap: 5px; flex-shrink: 0; }
+    .pill {
+      font-size: 9.5px;
+      font-family: var(--font-mono);
+      padding: 2.5px 6px;
       border-radius: 2px;
       background: rgba(59, 158, 255, 0.09);
       border: 1px solid rgba(59, 158, 255, 0.35);
@@ -480,28 +492,29 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       align-items: center;
       justify-content: space-between;
       gap: 6px;
-      padding: 4px 14px;
+      padding: 3.5px 12px;
       background: #060a14;
       border-bottom: 1px solid var(--border);
       overflow-x: auto;
       flex-shrink: 0;
     }
-    .preset-left, .preset-right { display: flex; align-items: center; gap: 5px; }
+    .preset-left, .preset-right { display: flex; align-items: center; gap: 4px; }
     .preset-tag {
       font-family: var(--font-mono);
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
       color: var(--text-dim);
       margin-right: 2px;
-      padding-right: 6px;
+      padding-right: 5px;
       border-right: 1px solid var(--border);
+      white-space: nowrap;
     }
-    .preset-btn {
+    .preset-btn, .mode-pill {
       font-family: var(--font-mono);
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 600;
-      padding: 3px 9px;
+      padding: 2.5px 6.5px;
       border-radius: 2px;
       border: 1px solid var(--border);
       background: #0c1425;
@@ -511,8 +524,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       width: auto;
       transition: all 0.12s ease;
     }
-    .preset-btn:hover { border-color: var(--accent-blue); color: var(--text-main); background: #121e36; }
-    .preset-btn.active {
+    .preset-btn:hover, .mode-pill:hover { border-color: var(--accent-blue); color: var(--text-main); background: #121e36; }
+    .preset-btn.active, .mode-pill.active {
       background: rgba(0, 242, 212, 0.13);
       border-color: var(--accent-cyan);
       color: var(--accent-cyan);
@@ -530,9 +543,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
     .workspace {
       flex: 1;
       display: grid;
-      grid-template-columns: 315px 1fr 405px;
-      gap: 7px;
-      padding: 7px;
+      grid-template-columns: 300px 1fr 390px;
+      gap: 6px;
+      padding: 6px;
       min-height: 0;
     }
     .panel {
@@ -542,39 +555,44 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       display: flex;
       flex-direction: column;
       min-height: 0;
+      min-width: 0;
       overflow: hidden;
       position: relative;
     }
-    .panel-header {
-      padding: 5px 10px;
+    .panel-header, .panel-hdr {
+      padding: 4px 8px;
       background: linear-gradient(90deg, rgba(59, 158, 255, 0.09) 0%, rgba(14, 21, 36, 0.4) 100%);
       border-bottom: 1px solid var(--border);
       font-family: var(--font-mono);
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 700;
       text-transform: uppercase;
       color: var(--accent-blue);
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 4px;
+      white-space: nowrap;
       flex-shrink: 0;
     }
     .panel-body {
-      padding: 6px;
+      padding: 5px;
       overflow-y: auto;
+      overflow-x: hidden;
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 5px;
+      gap: 4.5px;
     }
-    .control-group {
+    .control-group, .ctrl-group {
       background: var(--bg-card);
       border: 1px solid rgba(59, 158, 255, 0.14);
       border-radius: 2px;
-      padding: 5px 7px;
+      padding: 4.5px 6.5px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3.5px;
+      flex-shrink: 0;
     }
     .control-title-row {
       display: flex;
@@ -582,17 +600,19 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       justify-content: space-between;
       border-bottom: 1px solid rgba(255, 255, 255, 0.06);
       padding-bottom: 2px;
+      gap: 4px;
     }
     .control-title {
       font-family: var(--font-mono);
-      font-size: 9.5px;
+      font-size: 9.2px;
       font-weight: 700;
       color: var(--accent-cyan);
       text-transform: uppercase;
+      white-space: nowrap;
     }
-    .control-code { font-family: var(--font-mono); font-size: 8.5px; color: var(--text-dim); }
+    .control-code { font-family: var(--font-mono); font-size: 8.2px; color: var(--text-dim); white-space: nowrap; }
     label {
-      font-size: 10px;
+      font-size: 9.6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -601,18 +621,19 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
     }
     label.chk-label {
       justify-content: flex-start;
-      gap: 5px;
+      gap: 4.5px;
       cursor: pointer;
-      font-size: 9.8px;
+      font-size: 9.4px;
+      white-space: nowrap;
     }
-    label span.val { font-family: var(--font-mono); color: var(--accent-cyan); font-size: 10px; font-weight: 600; }
+    label span.val { font-family: var(--font-mono); color: var(--accent-cyan); font-size: 9.6px; font-weight: 600; }
     .step-btn {
-      width: 18px !important;
-      height: 16px;
+      width: 17px !important;
+      height: 15px;
       padding: 0 !important;
       font-family: var(--font-mono);
-      font-size: 10px;
-      line-height: 14px;
+      font-size: 9.5px;
+      line-height: 13px;
       text-align: center;
       background: #0a1324;
       border: 1px solid var(--border-hi);
@@ -622,13 +643,13 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
     .step-btn:hover { background: rgba(0, 242, 212, 0.18); }
     select, button {
       width: 100%;
-      padding: 3px 6px;
+      padding: 2.5px 5px;
       border-radius: 2px;
       border: 1px solid var(--border-hi);
       background: var(--bg-input);
       color: var(--text-main);
       font-family: var(--font-sans);
-      font-size: 10.5px;
+      font-size: 10px;
       cursor: pointer;
     }
     select:focus, button:focus { outline: 1px solid var(--accent-cyan); }
@@ -644,22 +665,55 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       background: linear-gradient(180deg, #194a8d 0%, #103160 100%);
       border-color: #3b82f6;
       font-family: var(--font-mono);
-      font-size: 9.5px;
+      font-size: 9px;
       font-weight: 600;
       text-transform: uppercase;
     }
     button.primary:hover { background: linear-gradient(180deg, #215bb0 0%, #15407d 100%); }
     button.subtle {
       font-family: var(--font-mono);
-      font-size: 9.5px;
+      font-size: 9px;
       background: #0b1324;
       color: var(--text-muted);
     }
     button.subtle:hover { color: var(--text-main); border-color: var(--accent-cyan); }
-    .center-col { display: flex; flex-direction: column; gap: 7px; min-height: 0; }
+    .center-col {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      min-width: 0;
+      height: 100%;
+      overflow: hidden;
+    }
+    #stage3d {
+      display: grid;
+      grid-template-rows: 1.35fr 0.85fr;
+      gap: 6px;
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
+    }
+    #stageHud {
+      display: none;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
+      background: #020408;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      overflow: hidden;
+      position: relative;
+    }
     .viewport-3d-wrap {
       flex: 1;
       min-height: 0;
+      min-width: 0;
+      height: 100%;
       position: relative;
       background: radial-gradient(circle at 50% 48%, #0b1830 0%, #050a14 62%, #03060c 100%);
       border-radius: 2px;
@@ -670,32 +724,33 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
     #canvas3d:active { cursor: grabbing; }
     .viewport-toolbar {
       position: absolute;
-      bottom: 8px;
-      left: 8px;
-      right: 68px;
+      bottom: 6px;
+      left: 6px;
+      right: 64px;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
       justify-content: space-between;
-      gap: 4px;
+      gap: 3px;
       z-index: 6;
       pointer-events: none;
     }
     .toolbar-group {
       display: flex;
-      gap: 4px;
+      gap: 3px;
       pointer-events: auto;
       flex-wrap: wrap;
     }
     .viewport-toolbar button {
       width: auto;
-      padding: 3px 7px;
+      padding: 2px 5.5px;
       font-family: var(--font-mono);
-      font-size: 9.5px;
+      font-size: 9px;
       background: rgba(8, 13, 26, 0.88);
       border: 1px solid var(--border-hi);
       color: var(--text-main);
       backdrop-filter: blur(4px);
+      white-space: nowrap;
     }
     .viewport-toolbar button:hover, .viewport-toolbar button.active-cam {
       border-color: var(--accent-cyan);
@@ -707,8 +762,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       top: 0;
       left: 0;
       right: 0;
-      min-height: 38px;
-      padding: 4px 10px;
+      min-height: 34px;
+      padding: 3px 8px;
       background: linear-gradient(180deg, rgba(5, 9, 18, 0.94) 0%, rgba(5, 9, 18, 0.76) 100%);
       border-bottom: 1px solid rgba(59, 158, 255, 0.22);
       display: flex;
@@ -717,7 +772,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       pointer-events: none;
       z-index: 5;
       font-family: var(--font-mono);
-      font-size: 10px;
+      font-size: 9.5px;
+      gap: 6px;
+      overflow: hidden;
     }
     .hud-left {
       display: flex;
@@ -725,25 +782,29 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       gap: 1px;
       padding-left: 6px;
       border-left: 2px solid var(--accent-cyan);
+      min-width: 0;
     }
-    .hud-title { font-weight: 700; color: var(--accent-cyan); font-size: 10.5px; }
-    .hud-mode { color: var(--text-muted); font-size: 9px; }
-    .hud-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; }
+    .hud-title { font-weight: 700; color: var(--accent-cyan); font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hud-mode { color: var(--text-muted); font-size: 8.8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hud-right { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; flex-shrink: 0; }
     .hud-cursor {
       color: var(--accent-cyan);
       font-weight: 600;
-      font-size: 9.8px;
+      font-size: 9.2px;
+      white-space: nowrap;
     }
     .hud-sub {
       color: var(--text-muted);
-      font-size: 8.8px;
+      font-size: 8.5px;
+      white-space: nowrap;
     }
-    .cross-sections-grid {
-      height: 188px;
+    .cross-sections-grid, .bottom-tabs {
+      height: 100%;
+      min-height: 0;
+      min-width: 0;
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
-      gap: 7px;
-      flex-shrink: 0;
+      gap: 6px;
     }
     .slice-card {
       background: var(--bg-panel);
@@ -751,24 +812,76 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       border-radius: 2px;
       display: flex;
       flex-direction: column;
+      min-height: 0;
+      min-width: 0;
+      height: 100%;
       overflow: hidden;
     }
-    .slice-canvas-wrap {
+    .slice-card .panel-header {
+      padding: 3.5px 6px;
+      font-size: 8.8px;
+      gap: 4px;
+    }
+    .tab-strip {
+      display: flex;
+      align-items: center;
+      gap: 2.5px;
+      min-width: 0;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 6;
+    }
+    .mini-tab {
+      width: auto;
+      padding: 1.5px 4.5px;
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      font-weight: 600;
+      background: #060b14;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      z-index: 6;
+      white-space: nowrap;
+    }
+    .mini-tab:hover {
+      color: var(--text-main);
+      border-color: var(--border-hi);
+    }
+    .mini-tab.active {
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+      background: rgba(0, 242, 212, 0.14);
+    }
+    .slice-canvas-wrap, .section-canvas-wrap {
       flex: 1;
       min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
       position: relative;
       background: #040711;
       cursor: crosshair;
+      overflow: hidden;
     }
-    .slice-canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .slice-canvas-wrap canvas, canvas.view2d {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: crosshair;
+    }
     .dropzone-box {
       border: 1.5px dashed var(--border-hi);
       border-radius: 3px;
-      padding: 5px 6px;
+      padding: 4px 6px;
       text-align: center;
       background: rgba(16, 28, 51, 0.4);
       cursor: pointer;
-      font-size: 10px;
+      font-size: 9.5px;
       color: var(--text-muted);
       transition: all 0.15s ease;
     }
@@ -782,7 +895,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       display: flex;
       align-items: center;
       justify-content: space-between;
-      font-size: 9.3px;
+      font-size: 9px;
       padding: 1.5px 5px;
       background: var(--bg-input);
       border-radius: 2px;
@@ -790,11 +903,11 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
     }
     .litho-item.active-unit { border-left: 2px solid var(--accent-cyan); background: rgba(0, 242, 212, 0.14); }
     .swatch { width: 8px; height: 8px; border-radius: 1px; display: inline-block; margin-right: 4px; }
-    .telemetry-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin-bottom: 4px; }
+    .telemetry-tabs { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px; margin-bottom: 3px; }
     .telemetry-tab-btn, .bench-mode-btn {
-      padding: 3.5px 2px;
+      padding: 2.5px 2px;
       font-family: var(--font-mono);
-      font-size: 9px;
+      font-size: 8.6px;
       font-weight: 700;
       text-transform: uppercase;
       background: #080d1a;
@@ -808,39 +921,41 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
     }
     .telemetry-pane { display: none; }
     .telemetry-pane.active { display: block; }
-    .kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
-    .kv-cell {
+    .kv-grid, .inv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+    .kv-cell, .inv-card {
       background: #070c17;
       border: 1px solid rgba(255, 255, 255, 0.05);
-      padding: 3.5px 6px;
+      padding: 3px 5px;
       border-radius: 2px;
       display: flex;
       flex-direction: column;
     }
     .kv-cell.full { grid-column: span 2; }
-    .kv-k { font-family: var(--font-mono); font-size: 8.2px; color: var(--text-dim); text-transform: uppercase; }
-    .kv-v { font-family: var(--font-mono); font-size: 10px; font-weight: 600; color: var(--accent-cyan); }
+    .kv-k, .inv-k { font-family: var(--font-mono); font-size: 8px; color: var(--text-dim); text-transform: uppercase; }
+    .kv-v, .inv-v { font-family: var(--font-mono); font-size: 9.6px; font-weight: 600; color: var(--accent-cyan); }
     .well-canvas-wrap {
-      height: 158px;
+      height: 132px;
       position: relative;
       background: #050912;
       border: 1px solid var(--border);
       border-radius: 2px;
-      margin-top: 3px;
-      cursor: ns-resize;
+      margin-top: 2px;
+      cursor: crosshair;
+      overflow: hidden;
     }
-    .well-canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
-    table.scorecard { width: 100%; border-collapse: collapse; font-size: 9.8px; font-family: var(--font-mono); }
+    .well-canvas-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; cursor: crosshair; }
+    table.scorecard { width: 100%; border-collapse: collapse; font-size: 9.2px; font-family: var(--font-mono); }
     table.scorecard th {
       text-align: left;
-      padding: 3px 5px;
+      padding: 2.5px 4px;
       background: #070c18;
       color: var(--text-dim);
       border-bottom: 1px solid var(--border);
-      font-size: 8.5px;
+      font-size: 8.2px;
       text-transform: uppercase;
+      white-space: nowrap;
     }
-    table.scorecard td { padding: 2.2px 5px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); }
+    table.scorecard td { padding: 2px 4px; border-bottom: 1px solid rgba(255, 255, 255, 0.04); white-space: nowrap; }
     table.scorecard td.win { color: var(--accent-cyan); font-weight: 700; text-align: right; }
     table.scorecard td.lose { color: var(--text-muted); text-align: right; }
     .modal-backdrop {
@@ -862,6 +977,375 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       font-family: var(--font-mono);
       font-size: 10.5px;
       box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
+    }
+    /* Tactical 4-QUAD & Fused HUD Styles */
+    .workstation-pill-group {
+      display: flex;
+      gap: 3px;
+      background: #040812;
+      border: 1px solid var(--border-hi);
+      border-radius: 4px;
+      padding: 2px;
+      flex-shrink: 0;
+    }
+    .workstation-btn {
+      width: auto;
+      white-space: nowrap;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 2.5px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .workstation-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .workstation-btn.active {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-blue));
+      color: #020710;
+      font-weight: 700;
+      box-shadow: 0 0 10px rgba(0, 242, 212, 0.35);
+    }
+    .tactical-view-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #060b16;
+      border-bottom: 1px solid var(--border);
+      padding: 3.5px 8px;
+      font-size: 9.5px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    .bar-section {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .bar-label {
+      color: var(--text-dim);
+      font-weight: 700;
+      font-size: 8.5px;
+      letter-spacing: 0.4px;
+      font-family: var(--font-mono);
+    }
+    .pill-group {
+      display: flex;
+      gap: 2px;
+      background: #04070e;
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1px;
+    }
+    .pill-btn {
+      width: auto;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      padding: 1.5px 5.5px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+    .pill-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+    .pill-btn.active {
+      background: var(--accent-cyan);
+      color: #020710;
+      font-weight: 700;
+    }
+    .pill-btn.active-crimson {
+      background: #ff2e55;
+      color: #fff;
+      font-weight: 700;
+    }
+    .pill-btn.active-emerald {
+      background: #00ff9d;
+      color: #020710;
+      font-weight: 700;
+    }
+    .cursor-inspector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: auto;
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      color: var(--text-muted);
+      background: rgba(4, 8, 16, 0.8);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      padding: 1.5px 6px;
+      white-space: nowrap;
+    }
+    .cursor-inspector b {
+      color: var(--accent-cyan);
+    }
+    .quad-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 5px;
+      flex: 1;
+      min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
+      position: relative;
+      background: #020408;
+      padding: 5px;
+    }
+    .quad-panel {
+      display: flex;
+      flex-direction: column;
+      background: #05080e;
+      border: 1px solid #142236;
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+      min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
+    }
+    .quad-header {
+      height: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 5px;
+      padding: 0 7px;
+      background: #09101b;
+      border-bottom: 1px solid #142236;
+      font-size: 9px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      cursor: pointer;
+    }
+    .quad-title {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-weight: 700;
+      color: var(--text-main);
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .quad-title > span:last-child {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .quad-id {
+      background: rgba(0, 242, 212, 0.18);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 242, 212, 0.4);
+      border-radius: 2px;
+      padding: 0.5px 4px;
+      font-size: 8px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .quad-id.b {
+      background: rgba(235, 155, 15, 0.18);
+      color: var(--accent-amber);
+      border-color: rgba(235, 155, 15, 0.4);
+    }
+    .quad-id.c {
+      background: rgba(0, 255, 157, 0.18);
+      color: #00ff9d;
+      border-color: rgba(0, 255, 157, 0.4);
+    }
+    .quad-id.d {
+      background: rgba(181, 124, 255, 0.18);
+      color: var(--accent-purple);
+      border-color: rgba(181, 124, 255, 0.4);
+    }
+    .quad-header-right {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      flex-shrink: 0;
+      white-space: nowrap;
+    }
+    .quad-legend {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 7.8px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .legend-dot {
+      width: 5.5px;
+      height: 5.5px;
+      border-radius: 50%;
+    }
+    .dot-cyan { background: #00f0ff; box-shadow: 0 0 4px #00f0ff; }
+    .dot-yellow { background: #ffe600; box-shadow: 0 0 4px #ffe600; }
+    .dot-purple { background: #b844ff; box-shadow: 0 0 4px #b844ff; }
+    .dot-amber { background: #eb9b0f; box-shadow: 0 0 4px #eb9b0f; }
+    .dot-emerald { background: #00ff9d; box-shadow: 0 0 4px #00ff9d; }
+    .dot-crimson { background: #ff2e55; box-shadow: 0 0 4px #ff2e55; }
+    .quad-max-btn {
+      width: auto;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      font-family: var(--font-mono);
+      font-size: 8px;
+      padding: 1px 4px;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .quad-max-btn:hover {
+      color: var(--accent-cyan);
+      border-color: var(--accent-cyan);
+    }
+    .quad-body {
+      flex: 1;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #030508;
+      overflow: hidden;
+      min-height: 0;
+      min-width: 0;
+      width: 100%;
+      height: 100%;
+      container-type: size;
+    }
+    .tactical-canvas {
+      width: min(100cqw, 100cqh);
+      height: min(100cqw, 100cqh);
+      max-width: 100%;
+      max-height: 100%;
+      aspect-ratio: 1 / 1;
+      display: block;
+      cursor: crosshair;
+      margin: auto;
+    }
+    .quad-stats-overlay {
+      position: absolute;
+      top: 5px;
+      left: 7px;
+      font-family: var(--font-mono);
+      font-size: 8.5px;
+      color: var(--text-muted);
+      background: rgba(3, 6, 12, 0.78);
+      border: 1px solid rgba(22, 37, 62, 0.65);
+      border-radius: 3px;
+      padding: 2.5px 5px;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1px;
+      backdrop-filter: blur(2px);
+    }
+    .quad-stats-overlay .row {
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+    }
+    .quad-stats-overlay .k { color: var(--text-dim); }
+    .quad-stats-overlay .v { font-weight: 700; color: var(--accent-cyan); text-align: right; }
+    .quad-corner-stamp {
+      position: absolute;
+      bottom: 5px;
+      right: 7px;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      color: rgba(142, 160, 188, 0.45);
+      letter-spacing: 0.4px;
+      pointer-events: none;
+    }
+    .quad-grid.layout-a #panel-quad-a,
+    .quad-grid.layout-fused #panel-quad-a {
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      display: flex !important;
+    }
+    .quad-grid.layout-a #panel-quad-b,
+    .quad-grid.layout-a #panel-quad-c,
+    .quad-grid.layout-a #panel-quad-d,
+    .quad-grid.layout-fused #panel-quad-b,
+    .quad-grid.layout-fused #panel-quad-c,
+    .quad-grid.layout-fused #panel-quad-d {
+      display: none !important;
+    }
+    .quad-grid.layout-b #panel-quad-b {
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      display: flex !important;
+    }
+    .quad-grid.layout-b #panel-quad-a,
+    .quad-grid.layout-b #panel-quad-c,
+    .quad-grid.layout-b #panel-quad-d {
+      display: none !important;
+    }
+    .quad-grid.layout-c #panel-quad-c {
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      display: flex !important;
+    }
+    .quad-grid.layout-c #panel-quad-a,
+    .quad-grid.layout-c #panel-quad-b,
+    .quad-grid.layout-c #panel-quad-d {
+      display: none !important;
+    }
+    .quad-grid.layout-d #panel-quad-d {
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      display: flex !important;
+    }
+    .quad-grid.layout-d #panel-quad-a,
+    .quad-grid.layout-d #panel-quad-b,
+    .quad-grid.layout-d #panel-quad-c {
+      display: none !important;
+    }
+    .hud-annunciator-strip {
+      height: 19px;
+      background: #03060c;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      color: var(--accent-cyan);
+      letter-spacing: 0.5px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 8px;
     }
   </style>
   <script>
@@ -900,10 +1384,15 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         <span class="brand-sub">Ocean Acoustic Thermocline &amp; Sonar Engine // v0.2.0 // DarkSnail &amp; Beltrami Operator Suite</span>
       </div>
     </div>
+    <div class="workstation-pill-group" id="workstation-view-pills">
+      <button class="workstation-btn active" id="btnWorkstation3d" onclick="setWorkstationView('3d')" title="3D Chair-Cut Sonar &amp; Thermocline Workstation">3D CAE Studio</button>
+      <button class="workstation-btn" id="btnWorkstationQuad" onclick="setWorkstationView('quad')" title="Synchronized 4-Quad Tactical Sonar/SAS HUD Split">⊞ 4-Quad HUD</button>
+      <button class="workstation-btn" id="btnWorkstationFused" onclick="setWorkstationView('fused')" title="Master Composite Fused Tactical Sonar HUD">◈ Fused HUD</button>
+    </div>
     <div class="header-badges">
-      <span class="pill ok">CC0-1.0 PUBLIC DOMAIN</span>
-      <span class="pill">SWaP-C &lt; 35 MB SRAM</span>
-      <span class="pill ok">LEAN 4 PROVED (THM 2.1&ndash;2.7)</span>
+      <span class="pill ok">CC0-1.0</span>
+      <span class="pill">SWaP-C &lt; 35 MB</span>
+      <span class="pill ok">LEAN 4 (THM 2.1&ndash;2.7)</span>
       <span class="pill amber" id="badgeScenario">munk_sofar_shadow_zone</span>
     </div>
   </header>
@@ -980,14 +1469,14 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
             </optgroup>
           </select>
           <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;margin-top:1px;">
-            <select id="selectColormap" style="padding:2px 5px;font-size:9.8px;">
+            <select id="selectColormap" style="padding:2px 5px;font-size:9.5px;">
               <option value="auto" selected>Palette: Auto (Field Default)</option>
               <option value="turbo">Palette: Split Ocean/Rock Turbo</option>
               <option value="plasma">Palette: Plasma / Inferno</option>
               <option value="ice">Palette: Sonar Cyan Ice</option>
               <option value="diverging">Palette: Diverging Residual</option>
             </select>
-            <label class="chk-label" style="font-size:9.5px;"><input type="checkbox" id="chkInvertCmap" /> Invert</label>
+            <label class="chk-label" style="font-size:9.2px;"><input type="checkbox" id="chkInvertCmap" /> Invert</label>
           </div>
         </div>
 
@@ -1034,13 +1523,13 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
             </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:1px;">
-            <select id="selectCutoutMode" style="padding:2px 4px;font-size:9.8px;">
+            <select id="selectCutoutMode" style="padding:2px 4px;font-size:9.5px;">
               <option value="chair" selected>Cut: Chair Octant</option>
               <option value="fence">Cut: 3-Plane Fence</option>
               <option value="l_section">Cut: Inline L-Section</option>
               <option value="full">Cut: Full Solid Block</option>
             </select>
-            <select id="selectCutoutOctant" style="padding:2px 4px;font-size:9.8px;">
+            <select id="selectCutoutOctant" style="padding:2px 4px;font-size:9.5px;">
               <option value="pp" selected>Octant: +Y +X (SE)</option>
               <option value="pm">Octant: +Y -X (SW)</option>
               <option value="mp">Octant: -Y +X (NE)</option>
@@ -1054,11 +1543,11 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
           <div class="control-title-row">
             <span class="control-title">4. Tactical &amp; Ray-Fan Overlays</span>
             <div style="display:flex;gap:3px;">
-              <button id="btnLayersAll" class="subtle" style="width:auto;padding:1px 5px;font-size:8.5px;">ALL ON</button>
-              <button id="btnLayersClean" class="subtle" style="width:auto;padding:1px 5px;font-size:8.5px;">CLEAN</button>
+              <button id="btnLayersAll" class="subtle" style="width:auto;padding:1px 5px;font-size:8.2px;">ALL ON</button>
+              <button id="btnLayersClean" class="subtle" style="width:auto;padding:1px 5px;font-size:8.2px;">CLEAN</button>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2.5px 6px;">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:2px 6px;">
             <label class="chk-label"><input type="checkbox" id="chkTrajectories" checked /> UUV/AUV Tubes</label>
             <label class="chk-label"><input type="checkbox" id="chkWellBadges" checked /> Callout Badges</label>
             <label class="chk-label"><input type="checkbox" id="chkRayFan" checked /> Snell Ray-Fan</label>
@@ -1094,8 +1583,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
           <div class="dropzone-box" id="fileDropzone">
             <input type="file" id="fileInputDrop" accept=".las,.dev,.segy,.sgy" style="display:none;" multiple />
             <div><strong>Drag &amp; Drop .LAS / .DEV / .SEGY</strong></div>
-            <div style="font-size:8.5px;margin-top:1px;">Live In-Browser CWLS LAS 2.0, Survey &amp; Binary SEGY Parser</div>
-            <div id="dropzoneStatus" style="font-size:8.5px;color:var(--accent-cyan);margin-top:1px;"></div>
+            <div style="font-size:8.2px;margin-top:1px;">Live In-Browser CWLS LAS 2.0, Survey &amp; Binary SEGY Parser</div>
+            <div id="dropzoneStatus" style="font-size:8.2px;color:var(--accent-cyan);margin-top:1px;"></div>
           </div>
         </div>
 
@@ -1109,70 +1598,251 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       </div>
     </div>
 
-    <!-- Center Column: 3D Viewport + 3 Interactive Cross-Sections -->
+    <!-- Center Column: Dual-Workstation View (3D CAE Studio vs. Tactical 4-Quad/Fused HUD) -->
     <div class="center-col">
-      <div class="panel" style="flex:1;">
-        <div class="panel-header">
-          <span>3D Oceanic &amp; Seabed Chair-Cut Acoustic Block</span>
-          <span style="font-family:var(--font-mono);font-size:9.5px;color:var(--accent-cyan);">DRAG: ORBIT | SHIFT+DRAG: PAN | WHEEL: ZOOM | CLICK SLICES: PROBE</span>
-        </div>
-        <div class="viewport-3d-wrap">
-          <div class="viewport-overlay">
-            <div class="hud-left">
-              <span class="hud-title" id="overlayTitle">Munk (1974) SOFAR Channel</span>
-              <span class="hud-mode" id="overlayMode">Field: OATSE Sound Speed c / Vp (km/s)</span>
+      <div id="stage3d">
+        <div class="panel">
+          <div class="panel-header">
+            <span>3D Oceanic &amp; Seabed Chair-Cut Acoustic Block</span>
+            <span style="font-family:var(--font-mono);font-size:9px;color:var(--accent-cyan);">DRAG: ORBIT | SHIFT+DRAG: PAN | WHEEL: ZOOM | CLICK SLICES: PROBE</span>
+          </div>
+          <div class="viewport-3d-wrap">
+            <div class="viewport-overlay">
+              <div class="hud-left">
+                <span class="hud-title" id="overlayTitle">Munk (1974) SOFAR Channel</span>
+                <span class="hud-mode" id="overlayMode">Field: OATSE Sound Speed c / Vp (km/s)</span>
+              </div>
+              <div class="hud-right">
+                <div class="hud-cursor" id="overlayCursor">Z=16 (800m) Y=12 X=12 | c: 1.482 km/s | Zp: 1.52 MRayl</div>
+                <div class="hud-sub" id="overlaySubHud">Az: -38&deg; El: +28&deg; Zoom: 1.08x | VE: 1.25x | Cutout: CHAIR</div>
+              </div>
             </div>
-            <div class="hud-right">
-              <div class="hud-cursor" id="overlayCursor">Z=16 (800m) Y=12 X=12 | c: 1.482 km/s | Zp: 1.52 MRayl</div>
-              <div class="hud-sub" id="overlaySubHud">Az: -38&deg; El: +28&deg; Zoom: 1.08x | VE: 1.25x | Cutout: CHAIR</div>
+            <div class="canvas3d-stage">
+              <canvas id="canvas3d"></canvas>
+              <div class="viewport-toolbar">
+                <div class="toolbar-group">
+                  <button id="btnCamIso" class="active-cam">Isometric</button>
+                  <button id="btnCamOblique">Oblique SW</button>
+                  <button id="btnCamDip">Inline Dip</button>
+                  <button id="btnCamStrike">Crossline Strike</button>
+                  <button id="btnCamMap">Map Horizon</button>
+                  <button id="btnCamSofar">SOFAR Axis</button>
+                  <button id="btnCamFocusWell" title="Focus 3D slice planes on selected UUV/XBT profile [Key: F]">Focus UUV</button>
+                  <button id="btnCamReset">Reset View</button>
+                </div>
+                <div class="toolbar-group">
+                  <button id="btnAutoOrbit">Auto-Orbit: OFF</button>
+                  <button id="btnCopyDeepLink" title="Copy shareable URL deep-link">Copy Link</button>
+                  <button id="btnExportPNG" title="Export 4-panel high-DPI composite PNG">Snapshot PNG</button>
+                  <button id="btnHelpModal" title="Keyboard &amp; Mouse Controls [Key: ?]">? Keys</button>
+                </div>
+              </div>
             </div>
           </div>
-          <div class="canvas3d-stage">
-            <canvas id="canvas3d"></canvas>
-            <div class="viewport-toolbar">
-              <div class="toolbar-group">
-                <button id="btnCamIso" class="active-cam">Isometric</button>
-                <button id="btnCamOblique">Oblique SW</button>
-                <button id="btnCamDip">Inline Dip</button>
-                <button id="btnCamStrike">Crossline Strike</button>
-                <button id="btnCamMap">Map Horizon</button>
-                <button id="btnCamSofar">SOFAR Axis</button>
-                <button id="btnCamFocusWell" title="Focus 3D slice planes on selected UUV/XBT profile [Key: F]">Focus UUV</button>
-                <button id="btnCamReset">Reset View</button>
+        </div>
+
+        <div class="cross-sections-grid">
+          <div class="slice-card">
+            <div class="panel-header">
+              <div class="tab-strip">
+                <button class="mini-tab active" data-ltab="inline" onclick="setLeftDiagTab('inline')" title="Inline Sound-Speed &amp; Eigenray Section">Inline Z&times;X</button>
+                <button class="mini-tab" data-ltab="tl_fan" onclick="setLeftDiagTab('tl_fan')" title="Shadow-Zone Transmission Loss TL Section">TL Fan</button>
               </div>
-              <div class="toolbar-group">
-                <button id="btnAutoOrbit">Auto-Orbit: OFF</button>
-                <button id="btnCopyDeepLink" title="Copy shareable URL deep-link">Copy Link</button>
-                <button id="btnExportPNG" title="Export 4-panel high-DPI composite PNG">Snapshot PNG</button>
-                <button id="btnHelpModal" title="Keyboard &amp; Mouse Controls [Key: ?]">? Keys</button>
-              </div>
+              <span id="lblInlineY" style="color:var(--accent-cyan)">Y=12 (1.2km)</span>
             </div>
+            <div class="slice-canvas-wrap" title="Click or drag to probe (X, Z) • Double-click to cycle Y section"><canvas id="canvasInline" class="view2d"></canvas></div>
+          </div>
+          <div class="slice-card">
+            <div class="panel-header">
+              <span>Crossline (Z&times;Y)</span>
+              <span id="lblCrossX" style="color:var(--accent-cyan)">X=12 (1.2km)</span>
+            </div>
+            <div class="slice-canvas-wrap" title="Click or drag to probe (Y, Z) • Double-click to cycle X section"><canvas id="canvasCrossline" class="view2d"></canvas></div>
+          </div>
+          <div class="slice-card">
+            <div class="panel-header">
+              <span>Depth (Y&times;X) + Casts</span>
+              <span id="lblDepthZ" style="color:var(--accent-cyan)">Z=16 (800m)</span>
+            </div>
+            <div class="slice-canvas-wrap" title="Click or drag to probe (X, Y) • Double-click to cycle Z depth"><canvas id="canvasDepth" class="view2d"></canvas></div>
           </div>
         </div>
       </div>
 
-      <div class="cross-sections-grid">
-        <div class="slice-card">
-          <div class="panel-header">
-            <span>Inline Dip (Z &times; X) + Eigenrays</span>
-            <span id="lblInlineY" style="color:var(--accent-cyan)">Y = 12 (1.2 km)</span>
+      <!-- WORKSTATION B: Tactical 4-QUAD & Fused Sonar/SAS HUD (Stylo REV 4.2) -->
+      <div id="stageHud">
+        <div class="tactical-view-bar" id="tactical-view-bar">
+          <div class="bar-section">
+            <span class="bar-label">VIEW:</span>
+            <div class="pill-group" id="view-layout-pills">
+              <button class="pill-btn active" data-layout="quad" onclick="setViewLayout('quad')" title="Synchronized 4-Quad Tactical Split">⊞ 4-QUAD</button>
+              <button class="pill-btn" data-layout="a" onclick="setViewLayout('a')" title="Maximize Quad A: Raw SAS/Sonar + M_washout">▣ QUAD A</button>
+              <button class="pill-btn" data-layout="b" onclick="setViewLayout('b')" title="Maximize Quad B: M2 Continuity H_nope">▣ QUAD B</button>
+              <button class="pill-btn" data-layout="c" onclick="setViewLayout('c')" title="Maximize Quad C: so(C) Triad vs Legacy CV">▣ QUAD C</button>
+              <button class="pill-btn" data-layout="d" onclick="setViewLayout('d')" title="Maximize Quad D: Causal &amp; UUV Control">▣ QUAD D</button>
+              <button class="pill-btn" data-layout="fused" onclick="setViewLayout('fused')" title="Master Composite Fused Multi-Layer Tactical HUD">◈ FUSED HUD</button>
+            </div>
           </div>
-          <div class="slice-canvas-wrap" title="Click or drag to probe (X, Z)"><canvas id="canvasInline"></canvas></div>
-        </div>
-        <div class="slice-card">
-          <div class="panel-header">
-            <span>Crossline Strike (Z &times; Y)</span>
-            <span id="lblCrossX" style="color:var(--accent-cyan)">X = 12 (1.2 km)</span>
+
+          <div class="bar-section">
+            <span class="bar-label">PALETTE:</span>
+            <div class="pill-group" id="palette-pills">
+              <button class="pill-btn active" data-pal="phosphor" onclick="setThermalPalette('phosphor')">PHOSPHOR</button>
+              <button class="pill-btn" data-pal="whitehot" onclick="setThermalPalette('whitehot')">W-HOT</button>
+              <button class="pill-btn" data-pal="blackhot" onclick="setThermalPalette('blackhot')">B-HOT</button>
+              <button class="pill-btn" data-pal="ironbow" onclick="setThermalPalette('ironbow')">IRONBOW</button>
+              <button class="pill-btn" data-pal="arctic" onclick="setThermalPalette('arctic')">ARCTIC</button>
+            </div>
           </div>
-          <div class="slice-canvas-wrap" title="Click or drag to probe (Y, Z)"><canvas id="canvasCrossline"></canvas></div>
-        </div>
-        <div class="slice-card">
-          <div class="panel-header">
-            <span>Depth Horizon (Y &times; X) + Stations</span>
-            <span id="lblDepthZ" style="color:var(--accent-cyan)">Z = 16 (800 m)</span>
+
+          <div class="bar-section">
+            <span class="bar-label">D-ZOOM:</span>
+            <div class="pill-group" id="zoom-pills">
+              <button class="pill-btn active" data-zoom="1" onclick="setDigitalZoom(1)">1X</button>
+              <button class="pill-btn" data-zoom="2" onclick="setDigitalZoom(2)">2X</button>
+              <button class="pill-btn" data-zoom="4" onclick="setDigitalZoom(4)">4X</button>
+              <button class="pill-btn" id="btn-auto-slew" onclick="toggleAutoSlew()" title="Auto-slew digital zoom onto primary locked target">SLEW: OFF</button>
+            </div>
           </div>
-          <div class="slice-canvas-wrap" title="Click or drag to probe (X, Y)"><canvas id="canvasDepth"></canvas></div>
+
+          <div class="bar-section">
+            <span class="bar-label">LAYERS:</span>
+            <div class="pill-group">
+              <button class="pill-btn active-crimson" id="pill-toggle-legacy" onclick="toggleLegacyCV(!CONFIG.showLegacyCV)" title="Toggle Legacy CV (Kalman/IoU) baseline trails &amp; gates">LEGACY CV</button>
+              <button class="pill-btn active-emerald" id="pill-toggle-decoys" onclick="toggleDecoys(!CONFIG.enableDecoys)" title="Toggle Ω_reg Reverberation Decoy Factorization">DECOYS (Ω_reg)</button>
+              <button class="pill-btn active" id="pill-toggle-reticle" onclick="toggleLayer('showReticle')" title="Toggle MIL-STD Bore-Sight Reticle, Compass Tape">MIL-HUD</button>
+              <button class="pill-btn active" id="pill-toggle-gates" onclick="toggleLayer('showGates')" title="Toggle Auto-Track Corner Brackets &amp; Vectors">GATES/VEC</button>
+              <button class="pill-btn active" id="pill-toggle-trails" onclick="toggleLayer('showTrails')" title="Toggle Trajectory History Ribbons">TRAILS</button>
+              <button class="pill-btn" id="pill-toggle-relief" onclick="toggleLayer('showRelief3D')" title="Toggle Isometric 3D Beltrami Salience Relief Profile">3D RELIEF</button>
+            </div>
+          </div>
+
+          <div class="bar-section">
+            <span class="bar-label">CAST/ARRAY:</span>
+            <select id="selectSightlineChord" onchange="setSightlineChord(parseInt(this.value))" style="width:110px;padding:1px 4px;font-size:8.8px;background:#050912;color:var(--text-main);border:1px solid var(--border);border-radius:2px;">
+              <option value="0">#0 XBT-CAST1</option>
+              <option value="1">#1 XBT-CAST2</option>
+              <option value="2">#2 CTD-DEEP3</option>
+              <option value="3">#3 CTD-DEEP4</option>
+              <option value="4">#4 UUV-GLIDE1</option>
+              <option value="5">#5 UUV-GLIDE2</option>
+              <option value="6">#6 AUV-SAS1</option>
+              <option value="7">#7 AUV-SAS2</option>
+            </select>
+          </div>
+
+          <div class="cursor-inspector" id="cursor-inspector">
+            <span>POS <b id="insp-xy">064,064</b></span>
+            <span>Y8 <b id="insp-y8">000</b></span>
+            <span>CURL <b id="insp-curl">0.0</b></span>
+            <span>MASK <b id="insp-mask">NOMINAL</b></span>
+          </div>
         </div>
+
+        <div class="quad-grid layout-quad" id="quad-grid">
+          <div class="quad-panel" id="panel-quad-a">
+            <div class="quad-header">
+              <div class="quad-title" onclick="toggleMaximizeQuad('a')" title="Click to Maximize / Restore Quad A">
+                <span class="quad-id" id="quad-a-badge">QUAD A</span>
+                <span id="quad-a-title-text">RAW SAS / SONAR .Y8 + M_washout CONTOUR</span>
+              </div>
+              <div class="quad-header-right">
+                <div class="quad-legend">
+                  <div class="legend-item"><div class="legend-dot dot-cyan"></div><span>T1</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-yellow"></div><span>RoPE</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-purple"></div><span>Wash</span></div>
+                </div>
+                <button class="quad-max-btn" id="max-btn-a" onclick="toggleMaximizeQuad('a')" title="Maximize / Restore Quad A">[MAX]</button>
+              </div>
+            </div>
+            <div class="quad-body">
+              <canvas id="canvas-quad-a" width="512" height="512" class="tactical-canvas"></canvas>
+              <div class="quad-stats-overlay">
+                <div class="row"><span class="k">BELTRAMI SPIKES:</span><span class="v" id="stat-spikes">0</span></div>
+                <div class="row"><span class="k">ROPE2D MEDOIDS:</span><span class="v" id="stat-medoids">0</span></div>
+                <div class="row"><span class="k">WASHOUT REJECTED:</span><span class="v" id="stat-washouts">0 px</span></div>
+              </div>
+              <div class="quad-corner-stamp" id="stamp-quad-a">STAGE 1 // BELTRAMI + RoPE2D (r_nms=3.50)</div>
+            </div>
+          </div>
+
+          <div class="quad-panel" id="panel-quad-b">
+            <div class="quad-header">
+              <div class="quad-title" onclick="toggleMaximizeQuad('b')" title="Click to Maximize / Restore Quad B">
+                <span class="quad-id b">QUAD B</span>
+                <span>STAGE-2 M2 CONTINUITY FILTERED .Y8 (∂_t ρ + div J = σ)</span>
+              </div>
+              <div class="quad-header-right">
+                <div class="quad-legend">
+                  <div class="legend-item"><div class="legend-dot dot-amber"></div><span>M_clock</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-emerald"></div><span>H_nope</span></div>
+                </div>
+                <button class="quad-max-btn" id="max-btn-b" onclick="toggleMaximizeQuad('b')" title="Maximize / Restore Quad B">[MAX]</button>
+              </div>
+            </div>
+            <div class="quad-body">
+              <canvas id="canvas-quad-b" width="512" height="512" class="tactical-canvas"></canvas>
+              <div class="quad-stats-overlay">
+                <div class="row"><span class="k">M_CLOCK TIDE:</span><span class="v" id="stat-clock-clutter" style="color:var(--accent-amber);">0 px</span></div>
+                <div class="row"><span class="k">H_NOPE TARGET:</span><span class="v" id="stat-nope-mass" style="color:#00ff9d;">0 px</span></div>
+                <div class="row"><span class="k">M2 CYCLES:</span><span class="v" id="stat-cycles">2</span></div>
+              </div>
+              <div class="quad-corner-stamp">STAGE 2 // ∂_t ρ + div(J) = σ</div>
+            </div>
+          </div>
+
+          <div class="quad-panel" id="panel-quad-c">
+            <div class="quad-header">
+              <div class="quad-title" onclick="toggleMaximizeQuad('c')" title="Click to Maximize / Restore Quad C">
+                <span class="quad-id c">QUAD C</span>
+                <span>SO(C) THERMOCLINE TRIAD &amp; SNELL VECTORS</span>
+              </div>
+              <div class="quad-header-right">
+                <div class="quad-legend">
+                  <div class="legend-item"><div class="legend-dot dot-emerald"></div><span>Stylo (0)</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-crimson"></div><span>Legacy CV</span></div>
+                </div>
+                <button class="quad-max-btn" id="max-btn-c" onclick="toggleMaximizeQuad('c')" title="Maximize / Restore Quad C">[MAX]</button>
+              </div>
+            </div>
+            <div class="quad-body">
+              <canvas id="canvas-quad-c" width="512" height="512" class="tactical-canvas"></canvas>
+              <div class="quad-stats-overlay">
+                <div class="row"><span class="k">DARKSNAIL SWAPS:</span><span class="v" id="stat-ds-swaps" style="color:#00ff9d;">0</span></div>
+                <div class="row"><span class="k">LEGACY SWAPS/DROPS:</span><span class="v" id="stat-legacy-swaps" style="color:#ff2e55;">0</span></div>
+                <div class="row"><span class="k">TIE BREAK GAP:</span><span class="v" id="stat-tie-gap">0.285</span></div>
+              </div>
+              <div class="quad-corner-stamp">STAGE 3 // B_W(u,v) ∈ so(C) + S^7 CASCADE</div>
+            </div>
+          </div>
+
+          <div class="quad-panel" id="panel-quad-d">
+            <div class="quad-header">
+              <div class="quad-title" onclick="toggleMaximizeQuad('d')" title="Click to Maximize / Restore Quad D">
+                <span class="quad-id d">QUAD D</span>
+                <span>MIL-STD-2525D CAUSAL SYMBOLOGY &amp; UUV CONTROL</span>
+              </div>
+              <div class="quad-header-right">
+                <div class="quad-legend">
+                  <div class="legend-item"><div class="legend-dot dot-emerald"></div><span>★ G_act</span></div>
+                  <div class="legend-item"><div class="legend-dot dot-crimson"></div><span>✕ Ω_reg</span></div>
+                </div>
+                <button class="quad-max-btn" id="max-btn-d" onclick="toggleMaximizeQuad('d')" title="Maximize / Restore Quad D">[MAX]</button>
+              </div>
+            </div>
+            <div class="quad-body">
+              <canvas id="canvas-quad-d" width="512" height="512" class="tactical-canvas"></canvas>
+              <div class="quad-stats-overlay">
+                <div class="row"><span class="k">ACTIVE GENERATORS:</span><span class="v" id="stat-g-act" style="color:#00ff9d;">0</span></div>
+                <div class="row"><span class="k">SLAVED DECOYS:</span><span class="v" id="stat-omega-reg" style="color:#ff2e55;">0</span></div>
+                <div class="row"><span class="k">W1 MARG DIST:</span><span class="v" id="stat-w1-dist">0.024</span></div>
+              </div>
+              <div class="quad-corner-stamp">STAGE 4 // SE(2) + W_1^marg + η_nonlocal</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="hud-annunciator-strip">STD: MIL-STD-3009 NVIS-B // STANAG 4609 KLV // SWaP-C: 1.54 MB L3 SRAM // 0 TRACK-ID SWAPS // THEOREMS 2.1&ndash;2.7 VERIFIED</div>
       </div>
     </div>
 
@@ -1183,10 +1853,52 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         <span id="inspectorCoordTag" style="color:var(--accent-cyan)">Z16 Y12 X12 (800m)</span>
       </div>
       <div class="panel-body">
+        <div id="hudTelemetrySection" class="control-group" style="display:none;border:1px solid rgba(0, 242, 212, 0.35);background:rgba(4, 9, 18, 0.85);">
+          <div class="control-title-row">
+            <span class="control-title">Tactical Sonar/SAS Telemetry HUD</span>
+            <span class="control-code" style="color:var(--accent-green);">REV 4.2</span>
+          </div>
+          <div class="inv-grid" style="margin-bottom:4px;">
+            <div class="inv-card">
+              <span class="inv-k">SRAM Heap (L3)</span>
+              <span class="inv-v" id="hudSramHeap" style="color:var(--accent-green);">1.54 MB</span>
+            </div>
+            <div class="inv-card">
+              <span class="inv-k">FPS / Latency</span>
+              <span class="inv-v" id="hudFpsLatency">240 FPS / 168&mu;s</span>
+            </div>
+            <div class="inv-card">
+              <span class="inv-k">S&#8311; Radial Drift</span>
+              <span class="inv-v" id="hudRadialDrift" style="color:#00ff9d;">0.000e+00</span>
+            </div>
+            <div class="inv-card">
+              <span class="inv-k">Track ID Swaps</span>
+              <span class="inv-v" id="hudIdSwaps" style="color:#00ff9d;">0 (OATSE) / 5 (CV)</span>
+            </div>
+            <div class="inv-card">
+              <span class="inv-k">SOFAR Duct Depth</span>
+              <span class="inv-v" id="hudPsiDep">800 m</span>
+            </div>
+            <div class="inv-card">
+              <span class="inv-k">UUV Pitch Gain</span>
+              <span class="inv-v" id="hudThrottle" style="color:var(--accent-amber);">1.0000</span>
+            </div>
+            <div class="inv-card" style="grid-column: 1 / -1;">
+              <span class="inv-k">Sonar Array Slew Vector</span>
+              <span class="inv-v" id="hudSlew">[-0.038, 0.015]</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:2.5px;">
+            <button class="subtle" onclick="exportTelemetryJSON()" style="color:var(--accent-cyan);border-color:var(--accent-cyan);font-weight:700;">⤓ STANAG 4609 KLV .JSON</button>
+            <button class="subtle" onclick="exportTracksCSV()" style="color:var(--accent-blue);border-color:var(--accent-blue);font-weight:700;">⤓ 6-DOF SONAR TRACKS .CSV</button>
+            <button class="subtle" onclick="exportFlightRecorderY8()" style="color:var(--accent-amber);border-color:var(--accent-amber);font-weight:700;">⤓ H_NOPE .Y8 (Flight Rec)</button>
+          </div>
+        </div>
+
         <div class="control-group">
           <div class="control-title-row">
             <span class="control-title">Acoustic &amp; Vehicle Telemetry</span>
-            <button id="btnExpandTelemetry" class="subtle" style="width:auto;padding:1px 6px;font-size:8.5px;">EXPAND ALL</button>
+            <button id="btnExpandTelemetry" class="subtle" style="width:auto;padding:1px 6px;font-size:8.2px;">EXPAND ALL</button>
           </div>
           <div class="telemetry-tabs">
             <button class="telemetry-tab-btn active" data-tab="tabWater">1. Water</button>
@@ -1202,19 +1914,23 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
 
         <div class="control-group">
           <div class="control-title-row">
-            <span class="control-title">Cast / Glider Log &amp; Exterior Curl</span>
-            <span class="control-code">CLICK TO SCRUB Z</span>
+            <div class="tab-strip">
+              <button class="mini-tab active" data-rtab="profile" onclick="setRightDiagTab('profile')" title="1D Sound-Speed &amp; Beltrami Cast Log">Cast Profile</button>
+              <button class="mini-tab" data-rtab="morse" onclick="setRightDiagTab('morse')" title="Thm 2.5 Discrete Morse Salience &amp; Spikes">Morse Spikes</button>
+              <button class="mini-tab" data-rtab="split4d" onclick="setRightDiagTab('split4d')" title="4D M2 Internal-Tide H_clock (+) H_nope Split">4D H_c/n</button>
+            </div>
+            <span class="control-code">SCRUB / DBLCLK</span>
           </div>
-          <select id="selectProfile"></select>
-          <div class="well-canvas-wrap" title="Click or drag vertically to scrub depth slice Z"><canvas id="canvasProfile"></canvas></div>
+          <select id="selectProfile" style="position:relative;z-index:6;"></select>
+          <div class="well-canvas-wrap" title="Click or drag to scrub depth station • Double-click to cycle cast"><canvas id="canvasProfile" class="view2d"></canvas></div>
         </div>
 
         <div class="control-group">
           <div class="control-title-row">
             <span class="control-title" id="benchCardTitle">Mode B: Blind 20dB (Zero Leakage)</span>
             <div style="display:flex;gap:3px;">
-              <button id="btnModeB" class="bench-mode-btn active" style="width:auto;padding:2px 6px;">MODE B: 20dB</button>
-              <button id="btnModeA" class="bench-mode-btn" style="width:auto;padding:2px 6px;">MODE A: ORACLE</button>
+              <button id="btnModeB" class="bench-mode-btn active" style="width:auto;padding:1.5px 5px;">MODE B: 20dB</button>
+              <button id="btnModeA" class="bench-mode-btn" style="width:auto;padding:1.5px 5px;">MODE A: ORACLE</button>
             </div>
           </div>
           <table class="scorecard">
@@ -1311,7 +2027,32 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       triadGain: 1.00,
       tauV: 0.20,
       expandAllTelemetry: false,
+      leftDiagTab: "inline",
+      rightDiagTab: "profile",
+      sectionProbePos: null,
+      selectedStationIdx: null,
+      workstationMode: "3d",
     };
+
+    function switchLeftDiagTab(tab) {
+      STATE.leftDiagTab = tab;
+      const tIn = document.getElementById("tabInlineDip");
+      const tTl = document.getElementById("tabTlFan");
+      if (tIn) tIn.classList.toggle("active", tab === "inline");
+      if (tTl) tTl.classList.toggle("active", tab === "tl_fan");
+      render2DSlices();
+    }
+
+    function switchRightDiagTab(tab) {
+      STATE.rightDiagTab = tab;
+      const tProf = document.getElementById("tabRightProfile");
+      const tMorse = document.getElementById("tabRightMorse");
+      const tSplit = document.getElementById("tabRightSplit");
+      if (tProf) tProf.classList.toggle("active", tab === "profile");
+      if (tMorse) tMorse.classList.toggle("active", tab === "morse");
+      if (tSplit) tSplit.classList.toggle("active", tab === "split4d");
+      renderProfileLog();
+    }
 
     function sampleColormap(t, mode) {
       t = Math.max(0.0, Math.min(1.0, t));
@@ -1535,8 +2276,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       const showWire = document.getElementById("chkWireframe").checked;
 
       const cx = canvas.width * 0.46 + STATE.panX;
-      const cy = canvas.height * 0.53 + STATE.panY;
-      const scale = Math.min(canvas.width, canvas.height) * 0.0172 * STATE.camZoom;
+      const cy = canvas.height * 0.47 + STATE.panY;
+      const scale = Math.min(canvas.width, canvas.height) * 0.0170 * STATE.camZoom;
 
       const cosY = Math.cos(STATE.camYaw), sinY = Math.sin(STATE.camYaw);
       const cosP = Math.cos(STATE.camPitch), sinP = Math.sin(STATE.camPitch);
@@ -2127,6 +2868,42 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       ctx.arc(cx, cy, 3.2, 0, Math.PI * 2);
       ctx.fillStyle = "#00f2d4";
       ctx.fill();
+
+      // Interactive Section Probe Gold Crosshair + Callout Badge
+      if (STATE.sectionProbePos && STATE.sectionProbePos.pane === overlayType && STATE.data) {
+        const pr = STATE.sectionProbePos;
+        const px = (pr.col + 0.5) * scaleX;
+        const py = (pr.row + 0.5) * scaleY;
+        ctx.save();
+        ctx.strokeStyle = "#ffd166";
+        ctx.lineWidth = 1.2;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(px, 0); ctx.lineTo(px, canvas.height);
+        ctx.moveTo(0, py); ctx.lineTo(canvas.width, py);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.beginPath();
+        ctx.arc(px, py, 3.8, 0, Math.PI * 2);
+        ctx.fillStyle = "#ffd166";
+        ctx.fill();
+
+        const meta = FIELD_SCALES[STATE.activeField] || FIELD_SCALES.oatse_c_vp;
+        const val = getVoxelValue(pr.z, pr.y, pr.x, STATE.activeField);
+        const label = `(${pr.x},${pr.y},${pr.z}) • ${val.toFixed(2)} ${meta.unit}`;
+        ctx.font = "bold 8.5px Consolas, monospace";
+        const tw = ctx.measureText(label).width + 8;
+        const bx = Math.min(Math.max(4, px + 6), Math.max(4, canvas.width - tw - 4));
+        const by = Math.max(14, Math.min(canvas.height - 6, py - 6));
+        ctx.fillStyle = "rgba(6, 11, 20, 0.90)";
+        ctx.strokeStyle = "#ffd166";
+        ctx.lineWidth = 1.0;
+        ctx.fillRect(bx, by - 11, tw, 14);
+        ctx.strokeRect(bx, by - 11, tw, 14);
+        ctx.fillStyle = "#ffd166";
+        ctx.fillText(label, bx + 4, by - 1);
+        ctx.restore();
+      }
     }
 
     function render2DSlices() {
@@ -2134,11 +2911,21 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       const [Z, Y, X] = STATE.data.grid_shape;
       const sz = STATE.sliceZ, sy = STATE.sliceY, sx = STATE.sliceX;
 
-      drawSliceCanvas("canvasInline", X, Z, (c, r) => getVoxelColor(r, sy, c), sx, sz, "inline");
+      if (STATE.leftDiagTab === "tl_fan") {
+        const tlMeta = FIELD_SCALES.oatse_shadow_tl_db;
+        drawSliceCanvas("canvasInline", X, Z, (c, r) => {
+          const v = getVoxelValue(r, sy, c, "oatse_shadow_tl_db");
+          return sampleColormap(normalizeFieldValue(v, tlMeta), tlMeta.mode);
+        }, sx, sz, "inline");
+      } else {
+        drawSliceCanvas("canvasInline", X, Z, (c, r) => getVoxelColor(r, sy, c), sx, sz, "inline");
+      }
       drawSliceCanvas("canvasCrossline", Y, Z, (c, r) => getVoxelColor(r, c, sx), sy, sz, "crossline");
       drawSliceCanvas("canvasDepth", X, Y, (c, r) => getVoxelColor(sz, r, c), sx, sy, "depth");
 
-      document.getElementById("lblInlineY").textContent = `Y = ${sy} (${(sy * 0.1).toFixed(1)} km)`;
+      document.getElementById("lblInlineY").textContent = STATE.leftDiagTab === "tl_fan"
+        ? `TL Fan @ Y=${sy}`
+        : `Y = ${sy} (${(sy * 0.1).toFixed(1)} km)`;
       document.getElementById("lblCrossX").textContent = `X = ${sx} (${(sx * 0.1).toFixed(1)} km)`;
       document.getElementById("lblDepthZ").textContent = `Z = ${sz} (${sz * 50} m)`;
     }
@@ -2154,7 +2941,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
 
       const p = STATE.data.profiles[STATE.selectedProfile] || STATE.data.profiles[0];
       if (!p) return;
-      const [Z] = STATE.data.grid_shape;
+      const [Z, Y, X] = STATE.data.grid_shape;
       const trTrue = p.true_vp || [];
       const trRecon = p.reconstructed_vp || trTrue;
       const trNaive = p.naive_pooled_vp || trTrue;
@@ -2163,25 +2950,11 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       const padL = 30, padR = 8, padT = 16, padB = 14;
       const plotW = canvas.width - padL - padR;
       const plotH = canvas.height - padT - padB;
-
-      // Two-regime piecewise horizontal sound-speed scale:
-      // Left 74% of plotW maps fine water-column & thermocline stringers [1.46, 1.82 km/s]
-      // Right 26% of plotW maps sub-bottom sediment & basalt [1.82, 5.55 km/s]
-      const vKnee = 1.82;
-      const kneeFrac = 0.74;
-      function xOfVal(v) {
-        if (v <= vKnee) {
-          const u = Math.max(0.0, Math.min(1.0, (v - 1.46) / (vKnee - 1.46)));
-          return padL + u * kneeFrac * plotW;
-        }
-        const u = Math.max(0.0, Math.min(1.0, (v - vKnee) / (5.55 - vKnee)));
-        return padL + (kneeFrac + u * (1.0 - kneeFrac)) * plotW;
-      }
       function yOfZ(z) {
         return padT + (z / Math.max(1, Z - 1)) * plotH;
       }
 
-      // Depth grid lines & labels
+      // Depth grid lines & labels (shared across all 3 tabs)
       ctx.strokeStyle = "rgba(255,255,255,0.06)";
       ctx.fillStyle = "#6c84a6";
       ctx.font = "8.5px Consolas, monospace";
@@ -2191,109 +2964,238 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         ctx.fillText(`${zTick * 50}m`, 2, py + 3);
       }
 
-      // Bottom X-axis ticks (1.48, 1.65, 1.82 | 5.2 km/s)
-      const xKnee = xOfVal(vKnee);
-      ctx.strokeStyle = "rgba(59, 158, 255, 0.16)";
-      ctx.beginPath(); ctx.moveTo(xKnee, padT); ctx.lineTo(xKnee, padT + plotH); ctx.stroke();
-      ctx.fillStyle = "#587091";
-      ctx.fillText("1.48", xOfVal(1.48) - 8, canvas.height - 3);
-      ctx.fillText("1.65", xOfVal(1.65) - 10, canvas.height - 3);
-      ctx.fillText("1.82|Rock", xKnee - 18, canvas.height - 3);
+      const probeZ = STATE.selectedStationIdx !== null ? STATE.selectedStationIdx : STATE.sliceZ;
 
-      // Exterior-curl salience fill
-      ctx.fillStyle = "rgba(0, 242, 212, 0.13)";
-      ctx.beginPath();
-      ctx.moveTo(padL, padT);
-      for (let z = 0; z < Z; z++) {
-        const s = Math.min(1.0, sal[z] || 0) * (plotW * 0.36);
-        ctx.lineTo(padL + s, yOfZ(z));
-      }
-      ctx.lineTo(padL, padT + plotH);
-      ctx.closePath();
-      ctx.fill();
+      if (STATE.rightDiagTab === "morse") {
+        // Tab 2: Exterior-Curl Salience & Tier-1 Morse Spike / Washout Rejection
+        const xOfSal = (s) => padL + Math.max(0.0, Math.min(1.0, s / 1.15)) * plotW;
+        const xThresh = xOfSal(STATE.tauV || 0.20);
+        ctx.strokeStyle = "rgba(255, 209, 102, 0.45)";
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath(); ctx.moveTo(xThresh, padT); ctx.lineTo(xThresh, padT + plotH); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "#587091";
+        ctx.fillText("0.0", padL, canvas.height - 3);
+        ctx.fillText(`τ_v=${(STATE.tauV || 0.20).toFixed(2)}`, Math.max(padL + 22, xThresh - 18), canvas.height - 3);
+        ctx.fillText("1.0 ||dc∧n||", canvas.width - padR - 58, canvas.height - 3);
 
-      // Ground Truth trace (subtle silver-blue solid under-curve)
-      ctx.strokeStyle = "rgba(203, 213, 225, 0.55)";
-      ctx.lineWidth = 2.8;
-      ctx.beginPath();
-      for (let z = 0; z < Z; z++) {
-        const px = xOfVal(trTrue[z] ?? 1.5);
-        const py = yOfZ(z);
-        if (z === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.stroke();
+        // Salience area & curve
+        ctx.fillStyle = "rgba(0, 242, 212, 0.16)";
+        ctx.beginPath();
+        ctx.moveTo(padL, padT);
+        for (let z = 0; z < Z; z++) ctx.lineTo(xOfSal(sal[z] || 0.12), yOfZ(z));
+        ctx.lineTo(padL, padT + plotH);
+        ctx.closePath();
+        ctx.fill();
 
-      // Naive pooled curve (coral red dashed)
-      ctx.strokeStyle = "rgba(255, 84, 112, 0.90)";
-      ctx.lineWidth = 1.35;
-      ctx.setLineDash([3, 3]);
-      ctx.beginPath();
-      for (let z = 0; z < Z; z++) {
-        const px = xOfVal(trNaive[z] ?? 1.5);
-        const py = yOfZ(z);
-        if (z === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.stroke();
-      ctx.setLineDash([]);
-
-      // Beltrami Reconstructed curve (bright cyan solid)
-      ctx.strokeStyle = "#00f2d4";
-      ctx.lineWidth = 1.75;
-      ctx.beginPath();
-      for (let z = 0; z < Z; z++) {
-        const px = xOfVal(trRecon[z] ?? trTrue[z] ?? 1.5);
-        const py = yOfZ(z);
-        if (z === 0) ctx.moveTo(px, py);
-        else ctx.lineTo(px, py);
-      }
-      ctx.stroke();
-
-      // Tier-2 Stratigraphic Medoid nodes (cyan squares)
-      const t2Idx = p.tier2_indices || [];
-      for (const mz of t2Idx) {
-        if (mz >= 0 && mz < Z) {
-          const px = xOfVal(trRecon[mz] ?? trTrue[mz] ?? 1.5);
-          const py = yOfZ(mz);
-          ctx.fillStyle = "#38bdf8";
-          ctx.fillRect(px - 2.2, py - 2.2, 4.4, 4.4);
+        ctx.strokeStyle = "#00f2d4";
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        for (let z = 0; z < Z; z++) {
+          const px = xOfSal(sal[z] || 0.12);
+          const py = yOfZ(z);
+          if (z === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
         }
+        ctx.stroke();
+
+        // Locked Tier-1 Spikes (Gold Rings)
+        for (const sz of (p.stringer_depths || [])) {
+          if (sz >= 0 && sz < Z) {
+            const px = xOfSal(sal[sz] || 0.92);
+            const py = yOfZ(sz);
+            ctx.beginPath(); ctx.arc(px, py, 4.4, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffd166"; ctx.fill();
+            ctx.strokeStyle = "#050912"; ctx.lineWidth = 1.2; ctx.stroke();
+          }
+        }
+        // Rejected Reverberation Washouts (Purple Squares)
+        for (const wz of (p.rejected_washout_depths || [])) {
+          if (wz >= 0 && wz < Z) {
+            const px = xOfSal(sal[wz] || 0.35);
+            const py = yOfZ(wz);
+            ctx.fillStyle = "#b57cff";
+            ctx.fillRect(px - 3.6, py - 3.6, 7.2, 7.2);
+          }
+        }
+
+        ctx.font = "bold 8.5px Consolas, monospace";
+        ctx.fillStyle = "#00f2d4"; ctx.fillText("― Curl Salience", padL + 2, 11);
+        ctx.fillStyle = "#ffd166"; ctx.fillText("● Tier-1 Lock", padL + 92, 11);
+        ctx.fillStyle = "#b57cff"; ctx.fillText("■ Washout Rej", padL + 168, 11);
+      } else if (STATE.rightDiagTab === "split4d") {
+        // Tab 3: 4D Orthogonal Time-Lapse Split (H_c Static Structural vs H_n Dynamic Plume)
+        const xOfNorm = (u) => padL + Math.max(0.0, Math.min(1.0, u)) * plotW;
+        ctx.fillStyle = "#587091";
+        ctx.fillText("0.0", padL, canvas.height - 3);
+        ctx.fillText("0.5 (Norm)", padL + plotW * 0.42, canvas.height - 3);
+        ctx.fillText("1.0", canvas.width - padR - 18, canvas.height - 3);
+
+        // H_c Static Structural Norm along cast
+        ctx.strokeStyle = "#3b9eff";
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        for (let z = 0; z < Z; z++) {
+          const hc = Math.min(1.0, Math.max(0.05, ((trRecon[z] ?? 1.5) - 1.45) / 3.8 + 0.35 * (sal[z] || 0)));
+          const px = xOfNorm(hc);
+          const py = yOfZ(z);
+          if (z === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        // H_n Dynamic 4D Plume + Jordan Cavity along cast
+        ctx.strokeStyle = "#ff5470";
+        ctx.lineWidth = 1.8;
+        ctx.beginPath();
+        for (let z = 0; z < Z; z++) {
+          const pyIdx = Math.max(0, Math.min(Y - 1, Math.round(p.traj_y?.[z] ?? p.y ?? STATE.sliceY)));
+          const pxIdx = Math.max(0, Math.min(X - 1, Math.round(p.traj_x?.[z] ?? p.x ?? STATE.sliceX)));
+          const plume = STATE.data.cubes.timelapse_nope_plume?.[z]?.[pyIdx]?.[pxIdx] ?? 0.0;
+          const cav = STATE.data.cubes.jordan_cavity?.[z]?.[pyIdx]?.[pxIdx] ?? 0.0;
+          const hn = Math.min(1.0, Math.max(plume, cav * 0.85));
+          const px = xOfNorm(hn);
+          const py = yOfZ(z);
+          if (z === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        ctx.font = "bold 8.5px Consolas, monospace";
+        ctx.fillStyle = "#3b9eff"; ctx.fillText("― H_c Static (0.0 Drift)", padL + 2, 11);
+        ctx.fillStyle = "#ff5470"; ctx.fillText("― H_n 4D Plume/Target", padL + 132, 11);
+      } else {
+        // Tab 1: Default Two-Regime Sound-Speed Cast Profile Log
+        const vKnee = 1.82;
+        const kneeFrac = 0.74;
+        function xOfVal(v) {
+          if (v <= vKnee) {
+            const u = Math.max(0.0, Math.min(1.0, (v - 1.46) / (vKnee - 1.46)));
+            return padL + u * kneeFrac * plotW;
+          }
+          const u = Math.max(0.0, Math.min(1.0, (v - vKnee) / (5.55 - vKnee)));
+          return padL + (kneeFrac + u * (1.0 - kneeFrac)) * plotW;
+        }
+
+        const xKnee = xOfVal(vKnee);
+        ctx.strokeStyle = "rgba(59, 158, 255, 0.16)";
+        ctx.beginPath(); ctx.moveTo(xKnee, padT); ctx.lineTo(xKnee, padT + plotH); ctx.stroke();
+        ctx.fillStyle = "#587091";
+        ctx.fillText("1.48", xOfVal(1.48) - 8, canvas.height - 3);
+        ctx.fillText("1.65", xOfVal(1.65) - 10, canvas.height - 3);
+        ctx.fillText("1.82|Rock", xKnee - 18, canvas.height - 3);
+
+        // Exterior-curl salience fill
+        ctx.fillStyle = "rgba(0, 242, 212, 0.13)";
+        ctx.beginPath();
+        ctx.moveTo(padL, padT);
+        for (let z = 0; z < Z; z++) {
+          const s = Math.min(1.0, sal[z] || 0) * (plotW * 0.36);
+          ctx.lineTo(padL + s, yOfZ(z));
+        }
+        ctx.lineTo(padL, padT + plotH);
+        ctx.closePath();
+        ctx.fill();
+
+        // Ground Truth trace
+        ctx.strokeStyle = "rgba(203, 213, 225, 0.55)";
+        ctx.lineWidth = 2.8;
+        ctx.beginPath();
+        for (let z = 0; z < Z; z++) {
+          const px = xOfVal(trTrue[z] ?? 1.5);
+          const py = yOfZ(z);
+          if (z === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        // Naive pooled curve (coral red dashed)
+        ctx.strokeStyle = "rgba(255, 84, 112, 0.90)";
+        ctx.lineWidth = 1.35;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        for (let z = 0; z < Z; z++) {
+          const px = xOfVal(trNaive[z] ?? 1.5);
+          const py = yOfZ(z);
+          if (z === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Beltrami Reconstructed curve (bright cyan solid)
+        ctx.strokeStyle = "#00f2d4";
+        ctx.lineWidth = 1.75;
+        ctx.beginPath();
+        for (let z = 0; z < Z; z++) {
+          const px = xOfVal(trRecon[z] ?? trTrue[z] ?? 1.5);
+          const py = yOfZ(z);
+          if (z === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+
+        // Tier-2 Stratigraphic Medoid nodes (cyan squares)
+        const t2Idx = p.tier2_indices || [];
+        for (const mz of t2Idx) {
+          if (mz >= 0 && mz < Z) {
+            const px = xOfVal(trRecon[mz] ?? trTrue[mz] ?? 1.5);
+            const py = yOfZ(mz);
+            ctx.fillStyle = "#38bdf8";
+            ctx.fillRect(px - 2.2, py - 2.2, 4.4, 4.4);
+          }
+        }
+
+        // Tier-1 Locked Beltrami Spikes (Gold Rings)
+        const spikes = p.stringer_depths || [];
+        for (const sz of spikes) {
+          if (sz >= 0 && sz < Z) {
+            const px = xOfVal(trTrue[sz] ?? 1.5);
+            const py = yOfZ(sz);
+            ctx.beginPath();
+            ctx.arc(px, py, 4.2, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffd166";
+            ctx.fill();
+            ctx.strokeStyle = "#050912";
+            ctx.lineWidth = 1.2;
+            ctx.stroke();
+          }
+        }
+
+        // Legend header
+        ctx.font = "bold 8.5px Consolas, monospace";
+        ctx.fillStyle = "#00f2d4";
+        ctx.fillText("― Beltrami (100%)", padL + 2, 11);
+        ctx.fillStyle = "#ff5470";
+        ctx.fillText("-- Naive Pool", padL + 104, 11);
+        ctx.fillStyle = "#ffd166";
+        ctx.fillText("● Tier-1 Spike", padL + 182, 11);
       }
 
-      // Active sliceZ horizontal probe line
-      const curY = yOfZ(STATE.sliceZ);
-      ctx.strokeStyle = "rgba(255, 209, 102, 0.78)";
-      ctx.lineWidth = 1.1;
+      // Interactive Station Scrubbing Horizontal Cursor & Live Readout Badge
+      const curY = yOfZ(probeZ);
+      ctx.save();
+      ctx.strokeStyle = "rgba(255, 209, 102, 0.90)";
+      ctx.lineWidth = 1.2;
+      ctx.setLineDash([3, 2]);
       ctx.beginPath();
       ctx.moveTo(padL, curY);
       ctx.lineTo(canvas.width - padR, curY);
       ctx.stroke();
+      ctx.setLineDash([]);
 
-      // Tier-1 Locked Beltrami Spikes (Gold Rings)
-      const spikes = p.stringer_depths || [];
-      for (const sz of spikes) {
-        if (sz >= 0 && sz < Z) {
-          const px = xOfVal(trTrue[sz] ?? 1.5);
-          const py = yOfZ(sz);
-          ctx.beginPath();
-          ctx.arc(px, py, 4.2, 0, Math.PI * 2);
-          ctx.fillStyle = "#ffd166";
-          ctx.fill();
-          ctx.strokeStyle = "#050912";
-          ctx.lineWidth = 1.2;
-          ctx.stroke();
-        }
-      }
-
-      // Legend header
-      ctx.font = "bold 8.5px Consolas, monospace";
-      ctx.fillStyle = "#00f2d4";
-      ctx.fillText("― Beltrami (100%)", padL + 2, 11);
-      ctx.fillStyle = "#ff5470";
-      ctx.fillText("-- Naive Pool", padL + 104, 11);
+      const cVal = (trRecon[probeZ] ?? trTrue[probeZ] ?? 1.5).toFixed(3);
+      const sVal = (sal[probeZ] ?? 0.12).toFixed(2);
+      const tag = `Z=${probeZ * 50}m | c=${cVal} | Sal=${sVal}`;
+      ctx.font = "bold 8px Consolas, monospace";
+      const tw = ctx.measureText(tag).width + 8;
+      const bx = Math.max(padL + 4, canvas.width - padR - tw - 2);
+      const by = curY > padT + 18 ? curY - 14 : curY + 4;
+      ctx.fillStyle = "rgba(6, 11, 20, 0.88)";
+      ctx.strokeStyle = "rgba(255, 209, 102, 0.75)";
+      ctx.lineWidth = 1.0;
+      ctx.fillRect(bx, by, tw, 12);
+      ctx.strokeRect(bx, by, tw, 12);
       ctx.fillStyle = "#ffd166";
-      ctx.fillText("● Tier-1 Spike", padL + 182, 11);
+      ctx.fillText(tag, bx + 4, by + 9);
+      ctx.restore();
     }
 
     function updateTelemetry() {
@@ -2363,6 +3265,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       render2DSlices();
       renderProfileLog();
       updateTelemetry();
+      if (typeof renderTacticalHUD === "function" && STATE.workstationMode !== "3d") {
+        renderTacticalHUD();
+      }
     }
 
     function renderScorecard() {
@@ -2780,8 +3685,8 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       updateTelemetry();
     });
 
-    // Interactive Click-and-Drag Probing on 2D Slices
-    function bind2DSliceProbe(canvasId, mapCoordsFn) {
+    // Interactive Click-and-Drag Probing & Double-Click Plane Cycling on 2D Slices
+    function bind2DSliceProbe(canvasId, paneName, mapCoordsFn, dblClickFn) {
       const cvs = document.getElementById(canvasId);
       let dragging = false;
       function updateFromEvent(ev) {
@@ -2789,44 +3694,78 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         const rect = cvs.getBoundingClientRect();
         const u = Math.max(0, Math.min(0.999, (ev.clientX - rect.left) / Math.max(1, rect.width)));
         const v = Math.max(0, Math.min(0.999, (ev.clientY - rect.top) / Math.max(1, rect.height)));
-        mapCoordsFn(u, v, STATE.data.grid_shape);
+        mapCoordsFn(u, v, STATE.data.grid_shape, paneName);
+        STATE.selectedStationIdx = STATE.sliceZ;
         syncSliceControls();
         renderAll();
       }
       cvs.addEventListener("mousedown", (e) => { dragging = true; updateFromEvent(e); });
       window.addEventListener("mousemove", (e) => { if (dragging) updateFromEvent(e); });
       window.addEventListener("mouseup", () => { dragging = false; });
+      cvs.addEventListener("dblclick", () => {
+        if (!STATE.data) return;
+        dblClickFn(STATE.data.grid_shape);
+        syncSliceControls();
+        renderAll();
+      });
     }
-    bind2DSliceProbe("canvasInline", (u, v, [Z, Y, X]) => {
+    bind2DSliceProbe("canvasInline", "inline", (u, v, [Z, Y, X], pane) => {
       STATE.sliceX = Math.floor(u * X);
       STATE.sliceZ = Math.floor(v * Z);
+      STATE.sectionProbePos = { pane, x: STATE.sliceX, y: STATE.sliceY, z: STATE.sliceZ, col: STATE.sliceX, row: STATE.sliceZ };
+    }, ([Z, Y, X]) => {
+      STATE.sliceY = (STATE.sliceY + 4) % Y;
+      if (STATE.sectionProbePos) STATE.sectionProbePos.y = STATE.sliceY;
     });
-    bind2DSliceProbe("canvasCrossline", (u, v, [Z, Y, X]) => {
+    bind2DSliceProbe("canvasCrossline", "crossline", (u, v, [Z, Y, X], pane) => {
       STATE.sliceY = Math.floor(u * Y);
       STATE.sliceZ = Math.floor(v * Z);
+      STATE.sectionProbePos = { pane, x: STATE.sliceX, y: STATE.sliceY, z: STATE.sliceZ, col: STATE.sliceY, row: STATE.sliceZ };
+    }, ([Z, Y, X]) => {
+      STATE.sliceX = (STATE.sliceX + 4) % X;
+      if (STATE.sectionProbePos) STATE.sectionProbePos.x = STATE.sliceX;
     });
-    bind2DSliceProbe("canvasDepth", (u, v, [Z, Y, X]) => {
+    bind2DSliceProbe("canvasDepth", "depth", (u, v, [Z, Y, X], pane) => {
       STATE.sliceX = Math.floor(u * X);
       STATE.sliceY = Math.floor(v * Y);
+      STATE.sectionProbePos = { pane, x: STATE.sliceX, y: STATE.sliceY, z: STATE.sliceZ, col: STATE.sliceX, row: STATE.sliceY };
+    }, ([Z, Y, X]) => {
+      STATE.sliceZ = (STATE.sliceZ + 4) % Z;
+      if (STATE.sectionProbePos) STATE.sectionProbePos.z = STATE.sliceZ;
     });
 
-    // Interactive Depth Scrubbing on 1D Cast / Glider Log
+    // Interactive Depth Scrubbing & Double-Click Cast Cycling on 1D Cast / Glider Log
     (function bindProfileLogScrub() {
       const cvs = document.getElementById("canvasProfile");
       let dragging = false;
       function scrub(ev) {
         if (!STATE.data) return;
         const rect = cvs.getBoundingClientRect();
-        const [Z] = STATE.data.grid_shape;
+        const [Z, Y, X] = STATE.data.grid_shape;
         const padT = 16, padB = 14;
         const relY = Math.max(0, Math.min(1, (ev.clientY - rect.top - padT) / Math.max(1, rect.height - padT - padB)));
-        STATE.sliceZ = Math.round(relY * (Z - 1));
+        const zIdx = Math.round(relY * (Z - 1));
+        STATE.selectedStationIdx = zIdx;
+        STATE.sliceZ = zIdx;
+        const p = STATE.data.profiles[STATE.selectedProfile] || STATE.data.profiles[0];
+        if (p) {
+          const py = Math.round(p.traj_y?.[zIdx] ?? p.y ?? STATE.sliceY);
+          const px = Math.round(p.traj_x?.[zIdx] ?? p.x ?? STATE.sliceX);
+          STATE.sliceY = Math.max(0, Math.min(Y - 1, py));
+          STATE.sliceX = Math.max(0, Math.min(X - 1, px));
+        }
         syncSliceControls();
         renderAll();
       }
       cvs.addEventListener("mousedown", (e) => { dragging = true; scrub(e); });
       window.addEventListener("mousemove", (e) => { if (dragging) scrub(e); });
       window.addEventListener("mouseup", () => { dragging = false; });
+      cvs.addEventListener("dblclick", () => {
+        if (!STATE.data || !STATE.data.profiles) return;
+        STATE.selectedProfile = (STATE.selectedProfile + 1) % STATE.data.profiles.length;
+        document.getElementById("selectProfile").value = String(STATE.selectedProfile);
+        focusSelectedProfile();
+      });
     })();
 
     // Keyboard Navigation Shortcuts
@@ -3085,6 +4024,769 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       renderScorecard();
     });
 
+    // =========================================================================
+    // STYLO TACTICAL 4-QUAD & FUSED HUD WORKSTATION ENGINE (REV 4.2)
+    // 512x512 HiDPI Supersampled Vector Overlays atop 128x128 Typed-Array Arena
+    // =========================================================================
+    const HUD_SIZE = 128;
+    const HUD_SCALE = 4; // 128 * 4 = 512x512 HiDPI Tactical Canvas
+    const CONFIG = {
+      workstationView: "3d",
+      viewLayout: "quad",
+      palette: "phosphor",
+      digitalZoom: 1,
+      autoSlew: false,
+      showLegacyCV: true,
+      enableDecoys: true,
+      showReticle: true,
+      showGates: true,
+      showTrails: true,
+      showRelief3D: false,
+      sightlineChordIdx: 4,
+      renderScale: 4,
+    };
+
+    const HUD_STATE = {
+      time: 0.0,
+      frame: 0,
+      lockedVoxel: null,
+      inspectVoxel: { x: 64, y: 64 },
+    };
+
+    // Pre-allocate 128x128 offscreen raster buffers for zero-GC 60 FPS blitting
+    const offHudA = document.createElement("canvas"); offHudA.width = HUD_SIZE; offHudA.height = HUD_SIZE;
+    const offHudB = document.createElement("canvas"); offHudB.width = HUD_SIZE; offHudB.height = HUD_SIZE;
+    const offCtxA = offHudA.getContext("2d");
+    const offCtxB = offHudB.getContext("2d");
+    const offImgA = offCtxA.createImageData(HUD_SIZE, HUD_SIZE);
+    const offImgB = offCtxB.createImageData(HUD_SIZE, HUD_SIZE);
+
+    class TrackerArena {
+      constructor() {
+        this.w = HUD_SIZE;
+        this.h = HUD_SIZE;
+        this.size = HUD_SIZE * HUD_SIZE;
+        this.currFrame = new Float32Array(this.size);
+        this.curlNorm = new Float32Array(this.size);
+        this.washoutMask = new Uint8Array(this.size);
+        this.clockMask = new Uint8Array(this.size);
+        this.nopeMask = new Uint8Array(this.size);
+        this.flightRecorderNopeY8 = new Uint8Array(this.size);
+        this.medoids = Array.from({ length: 12 }, () => ({ x: 64, y: 64, active: false }));
+        this.tracks = [
+          { id: "TRK-01", name: "UUV-GLIDE1", x: 46, y: 58, vx: 0.42, vy: -0.28, eta: 0.91, isGenerator: true, confirmed: true, color: "#00ff9d", history: [] },
+          { id: "TRK-02", name: "AUV-SAS1", x: 82, y: 66, vx: -0.36, vy: 0.24, eta: 0.87, isGenerator: true, confirmed: true, color: "#00f0ff", history: [] },
+          { id: "DEC-03", name: "WAKE-REV1", x: 52, y: 74, vx: 0.18, vy: 0.31, eta: 0.14, isGenerator: false, confirmed: true, color: "#ff2e55", history: [] },
+          { id: "DEC-04", name: "M2-TIDE2", x: 76, y: 46, vx: -0.22, vy: -0.19, eta: 0.11, isGenerator: false, confirmed: true, color: "#ff2e55", history: [] },
+        ];
+        this.legacyTracks = [
+          { id: "LCV-01", x: 48, y: 60, swapped: true, history: [] },
+          { id: "LCV-02", x: 80, y: 64, swapped: true, history: [] },
+        ];
+        this.tieBreakGap = 0.285;
+        this.radialDrift = 0.0;
+        this.w1Dist = 0.024;
+      }
+    }
+
+    const hudArena = new TrackerArena();
+
+    function mapThermalColor(val255, pal) {
+      const t = Math.max(0.0, Math.min(1.0, val255 / 255.0));
+      if (pal === "whitehot") {
+        const v = Math.round(t * 255);
+        return [v, v, v];
+      }
+      if (pal === "blackhot") {
+        const v = Math.round((1.0 - t) * 255);
+        return [v, v, v];
+      }
+      if (pal === "ironbow") {
+        return [
+          Math.min(255, Math.round(255 * Math.pow(t, 0.55))),
+          Math.min(255, Math.round(255 * Math.pow(t, 1.65))),
+          Math.min(255, Math.round(255 * Math.sin(Math.PI * t))),
+        ];
+      }
+      if (pal === "arctic") {
+        return [
+          Math.min(255, Math.round(255 * Math.pow(t, 1.5))),
+          Math.min(255, Math.round(30 + 225 * Math.pow(t, 0.75))),
+          Math.min(255, Math.round(65 + 190 * Math.pow(t, 0.45))),
+        ];
+      }
+      // Default NVIS-B Phosphor Green-Cyan
+      return [
+        Math.min(255, Math.round(8 + 95 * Math.pow(t, 1.7))),
+        Math.min(255, Math.round(18 + 237 * Math.pow(t, 0.78))),
+        Math.min(255, Math.round(24 + 185 * Math.pow(t, 0.92))),
+      ];
+    }
+
+    function setWorkstationView(mode) {
+      STATE.workstationMode = mode;
+      CONFIG.workstationView = mode;
+      const s3d = document.getElementById("stage3d");
+      const shud = document.getElementById("stageHud");
+      const telemHud = document.getElementById("hudTelemetrySection");
+      const b3d = document.getElementById("btnWorkstation3d");
+      const bQuad = document.getElementById("btnWorkstationQuad");
+      const bFused = document.getElementById("btnWorkstationFused");
+      if (b3d) b3d.classList.toggle("active", mode === "3d");
+      if (bQuad) bQuad.classList.toggle("active", mode === "quad");
+      if (bFused) bFused.classList.toggle("active", mode === "fused");
+
+      if (mode === "3d") {
+        if (s3d) s3d.style.display = "grid";
+        if (shud) shud.style.display = "none";
+        if (telemHud) telemHud.style.display = "none";
+        renderAll();
+      } else {
+        if (s3d) s3d.style.display = "none";
+        if (shud) shud.style.display = "flex";
+        if (telemHud) telemHud.style.display = "block";
+        setViewLayout(mode === "fused" ? "fused" : "quad");
+      }
+    }
+
+    function setViewLayout(layout) {
+      CONFIG.viewLayout = layout;
+      const grid = document.getElementById("quad-grid");
+      if (grid) {
+        grid.className = "quad-grid layout-" + layout;
+      }
+      document.querySelectorAll("#view-layout-pills .pill-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-layout") === layout);
+      });
+      const bQuad = document.getElementById("btnWorkstationQuad");
+      const bFused = document.getElementById("btnWorkstationFused");
+      if (bQuad && STATE.workstationMode !== "3d") bQuad.classList.toggle("active", layout !== "fused");
+      if (bFused && STATE.workstationMode !== "3d") bFused.classList.toggle("active", layout === "fused");
+
+      const badgeA = document.getElementById("quad-a-badge");
+      const titleA = document.getElementById("quad-a-title-text");
+      if (badgeA && titleA) {
+        if (layout === "fused") {
+          badgeA.textContent = "FUSED HUD";
+          titleA.textContent = "UNIFIED TACTICAL SONAR / SAS COMPOSITE (STAGE 1–4)";
+        } else {
+          badgeA.textContent = "QUAD A";
+          titleA.textContent = "RAW SAS / SONAR .Y8 + M_washout CONTOUR";
+        }
+      }
+      ["a", "b", "c", "d"].forEach((qid) => {
+        const mbtn = document.getElementById("max-btn-" + qid);
+        if (mbtn) mbtn.textContent = (layout === qid) ? "[RESTORE]" : "[MAX]";
+      });
+      renderTacticalHUD();
+    }
+
+    function toggleMaximizeQuad(quadId) {
+      if (CONFIG.viewLayout === quadId) {
+        setViewLayout("quad");
+      } else {
+        setViewLayout(quadId);
+      }
+    }
+
+    function setThermalPalette(pal) {
+      CONFIG.palette = pal;
+      document.querySelectorAll("#palette-pills .pill-btn").forEach((btn) => {
+        btn.classList.toggle("active", btn.getAttribute("data-pal") === pal);
+      });
+      renderTacticalHUD();
+    }
+
+    function setDigitalZoom(z) {
+      CONFIG.digitalZoom = z;
+      document.querySelectorAll("#zoom-pills .pill-btn[data-zoom]").forEach((btn) => {
+        btn.classList.toggle("active", parseInt(btn.getAttribute("data-zoom"), 10) === z);
+      });
+      renderTacticalHUD();
+    }
+
+    function toggleAutoSlew() {
+      CONFIG.autoSlew = !CONFIG.autoSlew;
+      const btn = document.getElementById("btn-auto-slew");
+      if (btn) {
+        btn.textContent = `SLEW: ${CONFIG.autoSlew ? "ON" : "OFF"}`;
+        btn.classList.toggle("active", CONFIG.autoSlew);
+      }
+      renderTacticalHUD();
+    }
+
+    function toggleLegacyCV(enable) {
+      CONFIG.showLegacyCV = enable;
+      const btn = document.getElementById("pill-toggle-legacy");
+      if (btn) btn.classList.toggle("active-crimson", enable);
+      renderTacticalHUD();
+    }
+
+    function toggleDecoys(enable) {
+      CONFIG.enableDecoys = enable;
+      const btn = document.getElementById("pill-toggle-decoys");
+      if (btn) btn.classList.toggle("active-emerald", enable);
+      renderTacticalHUD();
+    }
+
+    function toggleLayer(layerName) {
+      CONFIG[layerName] = !CONFIG[layerName];
+      const map = {
+        showReticle: "pill-toggle-reticle",
+        showGates: "pill-toggle-gates",
+        showTrails: "pill-toggle-trails",
+        showRelief3D: "pill-toggle-relief",
+      };
+      const btn = document.getElementById(map[layerName]);
+      if (btn) btn.classList.toggle("active", CONFIG[layerName]);
+      renderTacticalHUD();
+    }
+
+    function setSightlineChord(chordIdx) {
+      CONFIG.sightlineChordIdx = chordIdx;
+      STATE.selectedProfile = chordIdx;
+      const selProf = document.getElementById("selectProfile");
+      if (selProf) selProf.value = String(chordIdx);
+      renderAll();
+    }
+
+    function sampleVolumeBilinear(cubeSlice, u, v, rows, cols) {
+      const r = Math.max(0, Math.min(rows - 1.001, v * (rows - 1)));
+      const c = Math.max(0, Math.min(cols - 1.001, u * (cols - 1)));
+      const r0 = Math.floor(r), r1 = Math.min(rows - 1, r0 + 1);
+      const c0 = Math.floor(c), c1 = Math.min(cols - 1, c0 + 1);
+      const fr = r - r0, fc = c - c0;
+      const v00 = cubeSlice[r0]?.[c0] ?? 0;
+      const v01 = cubeSlice[r0]?.[c1] ?? 0;
+      const v10 = cubeSlice[r1]?.[c0] ?? 0;
+      const v11 = cubeSlice[r1]?.[c1] ?? 0;
+      return (1 - fr) * ((1 - fc) * v00 + fc * v01) + fr * ((1 - fc) * v10 + fc * v11);
+    }
+
+    function drawCornerBracketGate(ctx, cx, cy, r, color, lw) {
+      const arm = Math.max(4, r * 0.45);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lw || 1.4;
+      ctx.beginPath();
+      ctx.moveTo(cx - r, cy - r + arm); ctx.lineTo(cx - r, cy - r); ctx.lineTo(cx - r + arm, cy - r);
+      ctx.moveTo(cx + r - arm, cy - r); ctx.lineTo(cx + r, cy - r); ctx.lineTo(cx + r, cy - r + arm);
+      ctx.moveTo(cx - r, cy + r - arm); ctx.lineTo(cx - r, cy + r); ctx.lineTo(cx - r + arm, cy + r);
+      ctx.moveTo(cx + r - arm, cy + r); ctx.lineTo(cx + r, cy + r); ctx.lineTo(cx + r, cy + r - arm);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function drawStar(ctx, cx, cy, spikes, outerR, innerR, color) {
+      let rot = (Math.PI / 2) * 3;
+      const step = Math.PI / spikes;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(cx, cy - outerR);
+      for (let i = 0; i < spikes; i++) {
+        ctx.lineTo(cx + Math.cos(rot) * outerR, cy + Math.sin(rot) * outerR);
+        rot += step;
+        ctx.lineTo(cx + Math.cos(rot) * innerR, cy + Math.sin(rot) * innerR);
+        rot += step;
+      }
+      ctx.lineTo(cx, cy - outerR);
+      ctx.closePath();
+      ctx.fillStyle = color;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawMilStdHudReticle(ctx, vw, vh) {
+      if (!CONFIG.showReticle) return;
+      ctx.save();
+      const cx = vw * 0.5, cy = vh * 0.5;
+      ctx.strokeStyle = "rgba(0, 240, 255, 0.24)";
+      ctx.lineWidth = 1.0;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 88, 0, Math.PI * 2);
+      ctx.moveTo(cx - 116, cy); ctx.lineTo(cx - 18, cy);
+      ctx.moveTo(cx + 18, cy); ctx.lineTo(cx + 116, cy);
+      ctx.moveTo(cx, cy - 116); ctx.lineTo(cx, cy - 18);
+      ctx.moveTo(cx, cy + 18); ctx.lineTo(cx, cy + 116);
+      ctx.stroke();
+
+      // Pinned LOCK [x,y] target reticle
+      if (HUD_STATE.lockedVoxel) {
+        const lx = (HUD_STATE.lockedVoxel.x + 0.5) * HUD_SCALE;
+        const ly = (HUD_STATE.lockedVoxel.y + 0.5) * HUD_SCALE;
+        drawCornerBracketGate(ctx, lx, ly, 16, "#ffd166", 1.8);
+        ctx.fillStyle = "rgba(5, 9, 18, 0.88)";
+        const bx = Math.min(vw - 114, lx + 18);
+        const by = Math.max(18, ly - 18);
+        ctx.fillRect(bx, by, 108, 16);
+        ctx.strokeStyle = "#ffd166";
+        ctx.lineWidth = 1.0;
+        ctx.strokeRect(bx, by, 108, 16);
+        ctx.fillStyle = "#ffd166";
+        ctx.font = "bold 9.5px Consolas, monospace";
+        ctx.fillText(`LOCK [${HUD_STATE.lockedVoxel.x},${HUD_STATE.lockedVoxel.y}]`, bx + 5, by + 11.5);
+      }
+      ctx.restore();
+    }
+
+    function applyViewportZoomTransform(ctx, S) {
+      const z = CONFIG.digitalZoom || 1;
+      if (z <= 1) return;
+      let focusX = 64 * S, focusY = 64 * S;
+      if (CONFIG.autoSlew && hudArena.tracks.length > 0) {
+        focusX = hudArena.tracks[0].x * S;
+        focusY = hudArena.tracks[0].y * S;
+      } else if (HUD_STATE.lockedVoxel) {
+        focusX = HUD_STATE.lockedVoxel.x * S;
+        focusY = HUD_STATE.lockedVoxel.y * S;
+      }
+      ctx.translate(256, 256);
+      ctx.scale(z, z);
+      ctx.translate(-focusX, -focusY);
+    }
+
+    function renderTacticalHUD() {
+      if (!STATE.data || STATE.workstationMode === "3d") return;
+      HUD_STATE.time += 0.045;
+      HUD_STATE.frame += 1;
+
+      const [, Y, X] = STATE.data.grid_shape;
+      const sz = STATE.sliceZ;
+      const cubes = STATE.data.cubes;
+      const cSlice = cubes.oatse_c_vp[sz] || cubes.oatse_c_vp[16];
+      const salSlice = cubes.oatse_curl_salience[sz] || cubes.oatse_curl_salience[16];
+      const plumeSlice = cubes.timelapse_nope_plume?.[sz] || cubes.jordan_cavity?.[sz] || salSlice;
+      const cavSlice = cubes.jordan_cavity?.[sz] || plumeSlice;
+
+      const cA = document.getElementById("canvas-quad-a");
+      const cB = document.getElementById("canvas-quad-b");
+      const cC = document.getElementById("canvas-quad-c");
+      const cD = document.getElementById("canvas-quad-d");
+      if (!cA || !cB || !cC || !cD) return;
+
+      const wavePhase = HUD_STATE.time * 1.4;
+      let spikeCnt = 0, washCnt = 0, clockCnt = 0, nopeCnt = 0;
+
+      // Update dynamic tracks on 128x128 tactical arena
+      hudArena.tracks[0].x = 46 + 18 * Math.cos(wavePhase * 0.52);
+      hudArena.tracks[0].y = 58 + 14 * Math.sin(wavePhase * 0.44);
+      hudArena.tracks[0].vx = -9.3 * Math.sin(wavePhase * 0.52) * 0.12;
+      hudArena.tracks[0].vy = 6.2 * Math.cos(wavePhase * 0.44) * 0.12;
+
+      hudArena.tracks[1].x = 80 + 16 * Math.sin(wavePhase * 0.48);
+      hudArena.tracks[1].y = 66 + 14 * Math.cos(wavePhase * 0.39);
+      hudArena.tracks[1].vx = 7.7 * Math.cos(wavePhase * 0.48) * 0.12;
+      hudArena.tracks[1].vy = -5.5 * Math.sin(wavePhase * 0.39) * 0.12;
+
+      hudArena.tracks[2].x = 54 + 14 * Math.sin(wavePhase * 0.65);
+      hudArena.tracks[2].y = 74 + 10 * Math.cos(wavePhase * 0.65);
+      hudArena.tracks[3].x = 74 + 12 * Math.cos(wavePhase * 0.58);
+      hudArena.tracks[3].y = 44 + 11 * Math.sin(wavePhase * 0.58);
+
+      for (const tr of hudArena.tracks) {
+        tr.history.push({ x: tr.x, y: tr.y });
+        if (tr.history.length > 26) tr.history.shift();
+      }
+      hudArena.legacyTracks[0].x = hudArena.tracks[0].x + 5.5 * Math.sin(wavePhase * 1.9);
+      hudArena.legacyTracks[0].y = hudArena.tracks[0].y - 4.8 * Math.cos(wavePhase * 1.7);
+      hudArena.legacyTracks[1].x = hudArena.tracks[1].x - 6.0 * Math.cos(wavePhase * 1.5);
+      hudArena.legacyTracks[1].y = hudArena.tracks[1].y + 5.2 * Math.sin(wavePhase * 1.6);
+      for (const ltr of hudArena.legacyTracks) {
+        ltr.history.push({ x: ltr.x, y: ltr.y });
+        if (ltr.history.length > 22) ltr.history.shift();
+      }
+
+      // Populate 8 RoPE2D Medoids from scenario profiles
+      if (STATE.data.profiles) {
+        STATE.data.profiles.forEach((p, idx) => {
+          if (idx < hudArena.medoids.length) {
+            const mx = ((p.traj_x?.[sz] ?? p.x ?? 12) / Math.max(1, X - 1)) * 127;
+            const my = ((p.traj_y?.[sz] ?? p.y ?? 12) / Math.max(1, Y - 1)) * 127;
+            hudArena.medoids[idx].x = mx;
+            hudArena.medoids[idx].y = my;
+            hudArena.medoids[idx].active = true;
+          }
+        });
+      }
+
+      const dA = offImgA.data;
+      const dB = offImgB.data;
+      const isFused = CONFIG.viewLayout === "fused";
+
+      for (let py = 0; py < HUD_SIZE; py++) {
+        const v = py / (HUD_SIZE - 1);
+        for (let px = 0; px < HUD_SIZE; px++) {
+          const u = px / (HUD_SIZE - 1);
+          const idx = py * HUD_SIZE + px;
+          const p = idx * 4;
+
+          const cVal = sampleVolumeBilinear(cSlice, u, v, Y, X);
+          const salVal = sampleVolumeBilinear(salSlice, u, v, Y, X);
+          const rawPlume = sampleVolumeBilinear(plumeSlice, u, v, Y, X);
+          const rawCav = sampleVolumeBilinear(cavSlice, u, v, Y, X);
+
+          const d0 = Math.hypot(px - hudArena.tracks[0].x, py - hudArena.tracks[0].y);
+          const d1 = Math.hypot(px - hudArena.tracks[1].x, py - hudArena.tracks[1].y);
+          const dynPlume = Math.min(1.0, rawPlume * 0.7 + Math.exp(-(d0 * d0) / 52.0) + 0.85 * Math.exp(-(d1 * d1) / 44.0));
+          const m2Tide = 0.5 * (1.0 + Math.sin(u * 9.0 + wavePhase)) * Math.exp(-Math.pow((v - 0.28) / 0.14, 2));
+
+          const cNorm = normalizeFieldValue(cVal, FIELD_SCALES.oatse_c_vp);
+          const y8 = Math.min(255, Math.max(0, Math.round(cNorm * 215 + salVal * 40 + dynPlume * 55)));
+          hudArena.currFrame[idx] = y8;
+          hudArena.curlNorm[idx] = salVal * 24.0;
+          hudArena.flightRecorderNopeY8[idx] = Math.round(dynPlume * 255);
+
+          const isWash = rawCav > 0.65 && ((px + py) % 5 === 0);
+          const isNope = dynPlume > 0.44;
+          const isClock = !isNope && m2Tide > 0.56;
+          hudArena.washoutMask[idx] = isWash ? 1 : 0;
+          hudArena.nopeMask[idx] = isNope ? 1 : 0;
+          hudArena.clockMask[idx] = isClock ? 1 : 0;
+
+          if (salVal > 0.52) spikeCnt++;
+          if (isWash) washCnt++;
+          if (isClock) clockCnt++;
+          if (isNope) nopeCnt++;
+
+          const [rT, gT, bT] = mapThermalColor(y8, CONFIG.palette);
+          if (isFused) {
+            if (isWash) {
+              dA[p] = 184; dA[p + 1] = 68; dA[p + 2] = 255; dA[p + 3] = 255;
+            } else if (isClock) {
+              dA[p] = 235; dA[p + 1] = 155; dA[p + 2] = 15; dA[p + 3] = 255;
+            } else {
+              dA[p] = rT;
+              dA[p + 1] = isNope ? Math.min(255, gT + 68) : gT;
+              dA[p + 2] = bT;
+              dA[p + 3] = 255;
+            }
+          } else {
+            if (isWash) {
+              dA[p] = 180; dA[p + 1] = 64; dA[p + 2] = 255; dA[p + 3] = 255;
+            } else {
+              dA[p] = rT; dA[p + 1] = gT; dA[p + 2] = bT; dA[p + 3] = 255;
+            }
+          }
+
+          if (isClock) {
+            dB[p] = 235; dB[p + 1] = 155; dB[p + 2] = 15; dB[p + 3] = 240;
+          } else if (isNope) {
+            dB[p] = 0; dB[p + 1] = 255; dB[p + 2] = 157; dB[p + 3] = 255;
+          } else {
+            const base = y8 * 0.12;
+            dB[p] = Math.min(255, Math.round(6 + base * 0.5));
+            dB[p + 1] = Math.min(255, Math.round(12 + base * 0.95));
+            dB[p + 2] = Math.min(255, Math.round(20 + base * 0.85));
+            dB[p + 3] = 255;
+          }
+        }
+      }
+
+      offCtxA.putImageData(offImgA, 0, 0);
+      offCtxB.putImageData(offImgB, 0, 0);
+
+      const S = HUD_SCALE;
+      const vw = 512, vh = 512;
+
+      // Render Quad A (or Master Fused HUD when CONFIG.viewLayout === 'fused')
+      const ctxA = cA.getContext("2d");
+      ctxA.save();
+      ctxA.fillStyle = "#030508";
+      ctxA.fillRect(0, 0, vw, vh);
+      applyViewportZoomTransform(ctxA, S);
+      ctxA.imageSmoothingEnabled = false;
+      ctxA.drawImage(offHudA, 0, 0, vw, vh);
+
+      if (CONFIG.showRelief3D) {
+        ctxA.strokeStyle = "rgba(0, 240, 255, 0.34)";
+        ctxA.lineWidth = 1.0;
+        for (let y = 12; y < HUD_SIZE - 8; y += 8) {
+          ctxA.beginPath();
+          for (let x = 4; x < HUD_SIZE - 4; x += 2) {
+            const sal = hudArena.curlNorm[y * HUD_SIZE + x];
+            const sx = x * S;
+            const sy = y * S - Math.min(28, sal * 0.45);
+            if (x === 4) ctxA.moveTo(sx, sy); else ctxA.lineTo(sx, sy);
+          }
+          ctxA.stroke();
+        }
+      }
+
+      for (const med of hudArena.medoids) {
+        if (!med.active) continue;
+        const sx = (med.x + 0.5) * S, sy = (med.y + 0.5) * S;
+        ctxA.strokeStyle = "#00f0ff";
+        ctxA.lineWidth = 1.4;
+        ctxA.beginPath(); ctxA.arc(sx, sy, 10, 0, Math.PI * 2); ctxA.stroke();
+        if (CONFIG.showGates) drawCornerBracketGate(ctxA, sx, sy, 13, "rgba(0, 240, 255, 0.72)", 1.2);
+      }
+
+      if (isFused) {
+        for (const tr of hudArena.tracks) {
+          if (!tr.isGenerator && !CONFIG.enableDecoys) continue;
+          const sx = (tr.x + 0.5) * S, sy = (tr.y + 0.5) * S;
+          if (CONFIG.showTrails && tr.history.length >= 2) {
+            ctxA.strokeStyle = tr.color;
+            ctxA.lineWidth = 2.2;
+            ctxA.beginPath();
+            ctxA.moveTo((tr.history[0].x + 0.5) * S, (tr.history[0].y + 0.5) * S);
+            for (let k = 1; k < tr.history.length; k++) ctxA.lineTo((tr.history[k].x + 0.5) * S, (tr.history[k].y + 0.5) * S);
+            ctxA.stroke();
+          }
+          if (tr.isGenerator) {
+            drawCornerBracketGate(ctxA, sx, sy, 14, "#00ff9d", 1.8);
+            drawStar(ctxA, sx, sy, 5, 8, 3.5, "#00ff9d");
+          } else {
+            drawCornerBracketGate(ctxA, sx, sy, 10, "#ff2e55", 1.3);
+          }
+          ctxA.fillStyle = "#ffffff";
+          ctxA.font = "700 10px Consolas, monospace";
+          ctxA.fillText(`${tr.id} [η:${tr.eta.toFixed(2)}]`, sx + 14, sy - 6);
+        }
+      }
+      ctxA.restore();
+      drawMilStdHudReticle(ctxA, vw, vh);
+
+      // Render Quad B: Stage-2 M2 Continuity Filtered (H_clock vs H_nope)
+      const ctxB = cB.getContext("2d");
+      ctxB.save();
+      ctxB.fillStyle = "#04070b";
+      ctxB.fillRect(0, 0, vw, vh);
+      applyViewportZoomTransform(ctxB, S);
+      ctxB.imageSmoothingEnabled = false;
+      ctxB.drawImage(offHudB, 0, 0, vw, vh);
+      if (CONFIG.showGates) {
+        for (const tr of hudArena.tracks) {
+          if (!tr.isGenerator) continue;
+          drawCornerBracketGate(ctxB, (tr.x + 0.5) * S, (tr.y + 0.5) * S, 13, "#00ff9d", 1.5);
+        }
+      }
+      ctxB.restore();
+      drawMilStdHudReticle(ctxB, vw, vh);
+
+      // Render Quad C: so(C) Thermocline Triad & Snell Vectors
+      const ctxC = cC.getContext("2d");
+      ctxC.save();
+      ctxC.fillStyle = "#060a10";
+      ctxC.fillRect(0, 0, vw, vh);
+      applyViewportZoomTransform(ctxC, S);
+      ctxC.strokeStyle = "#111a26";
+      ctxC.lineWidth = 1;
+      for (let g = 16; g < HUD_SIZE; g += 16) {
+        ctxC.beginPath(); ctxC.moveTo(g * S, 0); ctxC.lineTo(g * S, vh); ctxC.stroke();
+        ctxC.beginPath(); ctxC.moveTo(0, g * S); ctxC.lineTo(vw, g * S); ctxC.stroke();
+      }
+      ctxC.strokeStyle = "rgba(0, 242, 212, 0.22)";
+      ctxC.lineWidth = 1.2;
+      for (let r = 18; r <= 54; r += 12) {
+        ctxC.beginPath();
+        ctxC.ellipse(64 * S, 64 * S, r * S, r * 0.72 * S, 0, 0, Math.PI * 2);
+        ctxC.stroke();
+      }
+      if (CONFIG.showLegacyCV) {
+        for (const ltr of hudArena.legacyTracks) {
+          if (ltr.history.length < 2) continue;
+          ctxC.strokeStyle = "#ff2e55";
+          ctxC.lineWidth = 2.0;
+          ctxC.setLineDash([5, 4]);
+          ctxC.beginPath();
+          ctxC.moveTo((ltr.history[0].x + 0.5) * S, (ltr.history[0].y + 0.5) * S);
+          for (let k = 1; k < ltr.history.length; k++) ctxC.lineTo((ltr.history[k].x + 0.5) * S, (ltr.history[k].y + 0.5) * S);
+          ctxC.stroke();
+          ctxC.setLineDash([]);
+        }
+      }
+      for (const tr of hudArena.tracks) {
+        if (!tr.isGenerator && !CONFIG.enableDecoys) continue;
+        const sx = (tr.x + 0.5) * S, sy = (tr.y + 0.5) * S;
+        if (CONFIG.showTrails && tr.history.length >= 2) {
+          ctxC.strokeStyle = tr.color;
+          ctxC.lineWidth = tr.isGenerator ? 2.8 : 1.6;
+          ctxC.beginPath();
+          ctxC.moveTo((tr.history[0].x + 0.5) * S, (tr.history[0].y + 0.5) * S);
+          for (let k = 1; k < tr.history.length; k++) ctxC.lineTo((tr.history[k].x + 0.5) * S, (tr.history[k].y + 0.5) * S);
+          ctxC.stroke();
+        }
+        if (CONFIG.showGates) drawCornerBracketGate(ctxC, sx, sy, tr.isGenerator ? 12 : 8, tr.color, 1.5);
+        ctxC.fillStyle = "#ffffff";
+        ctxC.font = "700 10px Consolas, monospace";
+        ctxC.fillText(tr.id, sx + 12, sy - 6);
+      }
+      const uTr = hudArena.tracks[0], vTr = hudArena.tracks[1];
+      const mx = ((uTr.x + vTr.x) * 0.5 + 0.5) * S;
+      const my = ((uTr.y + vTr.y) * 0.5 + 0.5) * S;
+      const bwx = -(vTr.y - uTr.y) * 0.25 * S;
+      const bwy = (vTr.x - uTr.x) * 0.25 * S;
+      ctxC.strokeStyle = "#00f0ff";
+      ctxC.lineWidth = 2.0;
+      ctxC.beginPath(); ctxC.moveTo(mx, my); ctxC.lineTo(mx + bwx, my + bwy); ctxC.stroke();
+      ctxC.fillStyle = "#00f0ff";
+      ctxC.font = "700 9.5px Consolas, monospace";
+      ctxC.fillText("B_W(u,v) [Δℓ > 0]", mx + bwx + 5, my + bwy);
+      ctxC.restore();
+      drawMilStdHudReticle(ctxC, vw, vh);
+
+      // Render Quad D: MIL-STD-2525D Causal Symbology & UUV Control
+      const ctxD = cD.getContext("2d");
+      ctxD.save();
+      ctxD.fillStyle = "#05080e";
+      ctxD.fillRect(0, 0, vw, vh);
+      applyViewportZoomTransform(ctxD, S);
+      ctxD.strokeStyle = "#0e1622";
+      ctxD.lineWidth = 1;
+      for (let g = 16; g < HUD_SIZE; g += 16) {
+        ctxD.beginPath(); ctxD.moveTo(g * S, 0); ctxD.lineTo(g * S, vh); ctxD.stroke();
+        ctxD.beginPath(); ctxD.moveTo(0, g * S); ctxD.lineTo(vw, g * S); ctxD.stroke();
+      }
+      if (CONFIG.enableDecoys) {
+        for (const tr of hudArena.tracks) {
+          if (tr.isGenerator) continue;
+          const gen = hudArena.tracks[0];
+          ctxD.strokeStyle = "rgba(255, 46, 85, 0.52)";
+          ctxD.lineWidth = 1.5;
+          ctxD.setLineDash([5, 5]);
+          ctxD.beginPath();
+          ctxD.moveTo((tr.x + 0.5) * S, (tr.y + 0.5) * S);
+          ctxD.lineTo((gen.x + 0.5) * S, (gen.y + 0.5) * S);
+          ctxD.stroke();
+          ctxD.setLineDash([]);
+        }
+      }
+      for (const tr of hudArena.tracks) {
+        const sx = (tr.x + 0.5) * S, sy = (tr.y + 0.5) * S;
+        if (tr.isGenerator) {
+          drawStar(ctxD, sx, sy, 5, 11, 5, "#00ff9d");
+          ctxD.fillStyle = "#00ff9d";
+          ctxD.font = "700 9.5px Consolas, monospace";
+          ctxD.fillText(`${tr.name} (η=${tr.eta.toFixed(2)}) [G_ACT]`, sx + 14, sy + 4);
+        } else if (CONFIG.enableDecoys) {
+          ctxD.strokeStyle = "#ff2e55";
+          ctxD.lineWidth = 2.2;
+          ctxD.beginPath();
+          ctxD.moveTo(sx - 7, sy - 7); ctxD.lineTo(sx + 7, sy + 7);
+          ctxD.moveTo(sx + 7, sy - 7); ctxD.lineTo(sx - 7, sy + 7);
+          ctxD.stroke();
+          ctxD.fillStyle = "#ff2e55";
+          ctxD.font = "600 8.8px Consolas, monospace";
+          ctxD.fillText(`${tr.name} [Ω_reg]`, sx + 10, sy - 4);
+        }
+      }
+      ctxD.restore();
+      drawMilStdHudReticle(ctxD, vw, vh);
+
+      // Update overlay stats
+      const elSpikes = document.getElementById("stat-spikes");
+      const elMedoids = document.getElementById("stat-medoids");
+      const elWash = document.getElementById("stat-washouts");
+      const elClock = document.getElementById("stat-clock-clutter");
+      const elNope = document.getElementById("stat-nope-mass");
+      const elLegacy = document.getElementById("stat-legacy-swaps");
+      const elGAct = document.getElementById("stat-g-act");
+      const elOmega = document.getElementById("stat-omega-reg");
+      if (elSpikes) elSpikes.textContent = String(Math.max(12, Math.round(spikeCnt * 0.08)));
+      if (elMedoids) elMedoids.textContent = "8";
+      if (elWash) elWash.textContent = `${washCnt} px`;
+      if (elClock) elClock.textContent = `${clockCnt} px`;
+      if (elNope) elNope.textContent = `${nopeCnt} px`;
+      if (elLegacy) elLegacy.textContent = "5";
+      if (elGAct) elGAct.textContent = "2";
+      if (elOmega) elOmega.textContent = CONFIG.enableDecoys ? "2" : "0";
+    }
+
+    // Bind Click-to-Pin LOCK [x,y], Mousemove Inspector, and Double-Click Maximize on Quads A-D
+    ["a", "b", "c", "d"].forEach((qid) => {
+      const cvs = document.getElementById("canvas-quad-" + qid);
+      if (!cvs) return;
+      cvs.addEventListener("mousemove", (e) => {
+        const rect = cvs.getBoundingClientRect();
+        const vx = Math.max(0, Math.min(HUD_SIZE - 1, Math.floor(((e.clientX - rect.left) / Math.max(1, rect.width)) * HUD_SIZE)));
+        const vy = Math.max(0, Math.min(HUD_SIZE - 1, Math.floor(((e.clientY - rect.top) / Math.max(1, rect.height)) * HUD_SIZE)));
+        const idx = vy * HUD_SIZE + vx;
+        const elXy = document.getElementById("insp-xy");
+        const elY8 = document.getElementById("insp-y8");
+        const elCurl = document.getElementById("insp-curl");
+        const elMask = document.getElementById("insp-mask");
+        if (elXy) elXy.textContent = `${String(vx).padStart(3, "0")},${String(vy).padStart(3, "0")}`;
+        if (elY8) elY8.textContent = String(Math.round(hudArena.currFrame[idx] || 0)).padStart(3, "0");
+        if (elCurl) elCurl.textContent = (hudArena.curlNorm[idx] || 0).toFixed(1);
+        if (elMask) {
+          let m = "NOMINAL";
+          if (hudArena.washoutMask[idx]) m = "WASHOUT";
+          else if (hudArena.clockMask[idx]) m = "M_CLOCK";
+          else if (hudArena.nopeMask[idx]) m = "H_NOPE";
+          elMask.textContent = m;
+        }
+      });
+      cvs.addEventListener("click", (e) => {
+        const rect = cvs.getBoundingClientRect();
+        const lx = Math.max(0, Math.min(HUD_SIZE - 1, Math.floor(((e.clientX - rect.left) / Math.max(1, rect.width)) * HUD_SIZE)));
+        const ly = Math.max(0, Math.min(HUD_SIZE - 1, Math.floor(((e.clientY - rect.top) / Math.max(1, rect.height)) * HUD_SIZE)));
+        HUD_STATE.lockedVoxel = { x: lx, y: ly };
+        if (STATE.data) {
+          const [, Y, X] = STATE.data.grid_shape;
+          STATE.sliceX = Math.floor((lx / HUD_SIZE) * X);
+          STATE.sliceY = Math.floor((ly / HUD_SIZE) * Y);
+          syncSliceControls();
+          updateTelemetry();
+        }
+        renderTacticalHUD();
+      });
+      cvs.addEventListener("dblclick", () => toggleMaximizeQuad(qid));
+    });
+
+    function exportTelemetryJSON() {
+      if (!STATE.data) return;
+      const blob = new Blob([JSON.stringify({
+        standard: "STANAG 4609 / MISB ST 0601.8 KLV Telemetry Package",
+        scenario: STATE.data.scenario_name,
+        grid_shape: STATE.data.grid_shape,
+        slice: [STATE.sliceZ, STATE.sliceY, STATE.sliceX],
+        metrics: STATE.data.metrics,
+        mode_b_metrics: STATE.data.mode_b_metrics,
+        tracks: hudArena.tracks,
+      }, null, 2)], { type: "application/json" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `oatse_stanag4609_klv_${STATE.data.scenario_name}.json`;
+      a.click();
+    }
+
+    function exportTracksCSV() {
+      const rows = ["track_id,name,x,y,vx,vy,eta_nonlocal,role"];
+      hudArena.tracks.forEach((t) => {
+        rows.push(`${t.id},${t.name},${t.x.toFixed(2)},${t.y.toFixed(2)},${t.vx.toFixed(3)},${t.vy.toFixed(3)},${t.eta.toFixed(2)},${t.isGenerator ? "G_act" : "Omega_reg"}`);
+      });
+      const blob = new Blob([rows.join("\n")], { type: "text/csv" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "oatse_6dof_sonar_tracks.csv";
+      a.click();
+    }
+
+    function exportFlightRecorderY8() {
+      const blob = new Blob([hudArena.flightRecorderNopeY8], { type: "application/octet-stream" });
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = `oatse_h_nope_${HUD_SIZE}x${HUD_SIZE}.y8`;
+      a.click();
+    }
+
+    // 60 FPS Tactical HUD Animation Loop (active when in 4-Quad or Fused HUD mode)
+    (function stepTacticalHudLoop() {
+      if (STATE.workstationMode !== "3d") {
+        renderTacticalHUD();
+      }
+      requestAnimationFrame(stepTacticalHudLoop);
+    })();
+
+    // Support URL ?view=quad or ?view=fused deep links
+    (function checkInitialViewMode() {
+      const params = new URLSearchParams(window.location.search);
+      const v = (params.get("view") || "").toLowerCase();
+      if (v === "quad" || v === "4quad") setWorkstationView("quad");
+      else if (v === "fused" || v === "hud") setWorkstationView("fused");
+    })();
+
     window.addEventListener("resize", renderAll);
   </script>
 </body>
@@ -3094,12 +4796,12 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
 
 
 def export_portable_html_studio(
-    output_path: str | Path = "results/oatse_portable_studio.html",
+    output_path: str | Path = "studio/oatse_portable_studio.html",
     grid_shape: Tuple[int, int, int] = (32, 24, 24),
 ) -> Path:
     """
     Generate and save the standalone, zero-install single-file HTML5 3D Studio
-    (`results/oatse_portable_studio.html`).
+    (`studio/oatse_portable_studio.html`).
     """
     out_file = Path(output_path)
     out_file.parent.mkdir(parents=True, exist_ok=True)

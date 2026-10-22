@@ -5,13 +5,13 @@
 [![SWaP-C](https://img.shields.io/badge/SWaP--C-%3C_35_MB_SRAM-brightgreen.svg)](#)
 
 > **Live 3D WebGL Sonar Studio (Zero-Install Browser Demo):**
-> - **[Launch Interactive 3D Studio (v0.2.0 CDN)](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html)** | **[main Dev Build](https://raw.githack.com/sneed-and-feed/oatse/main/results/oatse_portable_studio.html)**
+> - **[Launch Interactive 3D Studio (CDN)](https://rawcdn.githack.com/sneed-and-feed/oatse/main/studio/oatse_portable_studio.html)** | **[Stylo 4-Quad Tactical HUD (`?view=quad`)](https://rawcdn.githack.com/sneed-and-feed/oatse/main/studio/oatse_portable_studio.html?view=quad)** | **[Fused HUD (`?view=fused`)](https://rawcdn.githack.com/sneed-and-feed/oatse/main/studio/oatse_portable_studio.html?view=fused)**
 > - **One-Click Deep-Link Presets:**
->   - [**01. Munk SOFAR Channel & Shadow Zone (Deep Ocean Basin)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html?scenario=munk_sofar_shadow_zone&field=oatse_shadow_tl_db&well=5&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
->   - [**02. GIUK Polar Halocline Collision Front (North Atlantic)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html?scenario=giuk_polar_halocline_front&field=oatse_c_vp&well=6&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
->   - [**03. Littoral Shelf Internal Tide & Shallow Gas (Continental Margin)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html?scenario=littoral_internal_tide_wedge&field=oatse_zp&well=5&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
->   - [**04. Subsea Cable Tap & Mine Corridor (Seabed Warfare Route)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html?scenario=subsea_cable_mine_corridor&field=oatse_zp&well=6&sliceZ=14&sliceY=12&sliceX=12&zoom=1.05)
->   - [**05. North Atlantic Real NOAA XBT Field Doublet (UUV Glider + AUV SAS)**](https://rawcdn.githack.com/sneed-and-feed/oatse/v0.2.0/results/oatse_portable_studio.html?scenario=north_atlantic_xbt_field_doublet&field=oatse_c_vp&well=4&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
+>   - [**01. Munk SOFAR Channel & Shadow Zone (Deep Ocean Basin)**](https://rawcdn.githack.com/sneed-and-feed/oatse/main/studio/oatse_portable_studio.html?scenario=munk_sofar_shadow_zone&field=oatse_shadow_tl_db&well=5&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
+>   - [**02. GIUK Polar Halocline Collision Front (North Atlantic)**](https://rawcdn.githack.com/sneed-and-feed/oatse/main/studio/oatse_portable_studio.html?scenario=giuk_polar_halocline_front&field=oatse_c_vp&well=6&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
+>   - [**03. Littoral Shelf Internal Tide & Shallow Gas (Continental Margin)**](https://rawcdn.githack.com/sneed-and-feed/oatse/main/studio/oatse_portable_studio.html?scenario=littoral_internal_tide_wedge&field=oatse_zp&well=5&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
+>   - [**04. Subsea Cable Tap & Mine Corridor (Seabed Warfare Route)**](https://rawcdn.githack.com/sneed-and-feed/oatse/main/studio/oatse_portable_studio.html?scenario=subsea_cable_mine_corridor&field=oatse_zp&well=6&sliceZ=14&sliceY=12&sliceX=12&zoom=1.05)
+>   - [**05. North Atlantic Real NOAA XBT Field Doublet (UUV Glider + AUV SAS)**](https://rawcdn.githack.com/sneed-and-feed/oatse/main/studio/oatse_portable_studio.html?scenario=north_atlantic_xbt_field_doublet&field=oatse_c_vp&well=4&sliceZ=16&sliceY=12&sliceX=12&zoom=1.05)
 
 ![OATSE 3D WebGL Sonar & Thermocline Studio](docs/oatse_studio_preview.png)
 
@@ -22,7 +22,7 @@
 - **Seabed SAS Impedance Inversion and Sub-Bottom TTI Elasticity** $(Z_p = \rho V_p)$: Inverts normal and oblique reflection coefficients into coupled acoustic impedance Zp, and evaluates tilted transversely isotropic (TTI) marine sediments via Thomsen $(\epsilon, \delta, \gamma)$ parameters rotated by the $\mathrm{SO}(6)$ Kelvin-Mandel stiffness rotor (Theorem 2.7).
 - **Pure Non-Circular BeltramiCastShell** ($K = 8 + 8 = 16$ tokens): Recovers 100% of sub-meter seabed acoustic impedance spikes (proud/buried mines, cable taps, boulder stringers) under 10%–20% acoustic reverberation and bubble washouts using cross-shell exterior curl and 3-point discrete Morse impulse $(\Delta_- v \cdot \Delta_+ v > 0)$ with zero access to ground truth labels.
 - **4D Internal-Tide Continuity Splitter** (M2): Orthogonally decomposes repeat sonar sweeps into `H_clock (+) H_nope`, quarantining cyclic semidiurnal $M_2$ thermocline heaving in `H_clock` while recovering 100% of irreversible moving targets in `H_nope`.
-- **Zero-Install WebGL 3D Sonar Studio (`results/oatse_portable_studio.html`, v0.2.0)**: Standalone single-file dark-mode workstation with 19 selectable Mode A & Mode B 3D acoustic fields (including `Blind OATSE Gain vs Kriging`), 3D Snell acoustic eigenray / ray-fan overlays with physical seabed bounce reflection, 3D translucent front/seabed ribbons, 2D slice horizon/front contour overlays, full 3D view controls (Orbit, Shift-Pan, Zoom, live HUD `Az`/`El`/`Zoom`/`VE` telemetry, Vertical Exaggeration `0.5x–3.0x`, Opacity, `-`/`+` single-voxel slice steppers, 4 Cutout Modes + 4 Chair-Cut Octant corners, Colormap override + Invert toggle, 8 Camera Presets including `Focus UUV`, Auto-Orbit Turntable, Shareable Deep-Link URL copy, 4-panel Composite PNG Snapshot export, `? Keys` shortcut modal, Quick-Flip comparison buttons), docked colorbar with live cursor marker, 3D orientation triad gizmo, de-collided UUV/AUV trajectory callout badges, two-regime split X-axis 1D Beltrami cast log (`1.42–1.92 km/s` expanded water column + `1.92–6.00 km/s` rock sub-bottom), `EXPAND ALL` telemetry drawer, live DarkSnail operator tuning sliders, and mnemonic-aware client-side `.las` / `.dev` / `.segy` drag-and-drop inspection.
+- **Zero-Install WebGL 3D Sonar Studio (`studio/oatse_portable_studio.html`, v0.2.0)**: Standalone single-file dark-mode workstation with 19 selectable Mode A & Mode B 3D acoustic fields (including `Blind OATSE Gain vs Kriging`), 3D Snell acoustic eigenray / ray-fan overlays with physical seabed bounce reflection, 3D translucent front/seabed ribbons, 2D slice horizon/front contour overlays, full 3D view controls (Orbit, Shift-Pan, Zoom, live HUD `Az`/`El`/`Zoom`/`VE` telemetry, Vertical Exaggeration `0.5x–3.0x`, Opacity, `-`/`+` single-voxel slice steppers, 4 Cutout Modes + 4 Chair-Cut Octant corners, Colormap override + Invert toggle, 8 Camera Presets including `Focus UUV`, Auto-Orbit Turntable, Shareable Deep-Link URL copy, 4-panel Composite PNG Snapshot export, `? Keys` shortcut modal, Quick-Flip comparison buttons), docked colorbar with live cursor marker, 3D orientation triad gizmo, de-collided UUV/AUV trajectory callout badges, two-regime split X-axis 1D Beltrami cast log (`1.42–1.92 km/s` expanded water column + `1.92–6.00 km/s` rock sub-bottom), `EXPAND ALL` telemetry drawer, live DarkSnail operator tuning sliders, and mnemonic-aware client-side `.las` / `.dev` / `.segy` drag-and-drop inspection.
 
 ---
 
@@ -122,7 +122,7 @@ All mathematical primitives are checked against machine-verified formal proofs i
 
 ### Option 1: Zero-Install Portable HTML5 Studio (Immediate Browser Use)
 
-Open [`results/oatse_portable_studio.html`](results/oatse_portable_studio.html) directly in any web browser (Chrome, Firefox, Safari, Edge) on Linux, macOS, or Windows. It embeds all 5 pre-computed 3D sound-speed, transmission loss, and seabed acoustic impedance cubes, interactive 3D chair-cut block rendering, synchronized 2D cross-sections, UUV/AUV trajectory tubes, a client-side Drag-and-Drop `.las` / `.dev` / `.segy` Inspector, and live Theorem 2.1–2.7 telemetry with zero Python setup.
+Open [`studio/oatse_portable_studio.html`](studio/oatse_portable_studio.html) directly in any web browser (Chrome, Firefox, Safari, Edge) on Linux, macOS, or Windows. It embeds all 5 pre-computed 3D sound-speed, transmission loss, and seabed acoustic impedance cubes, interactive 3D chair-cut block rendering, synchronized 2D cross-sections, UUV/AUV trajectory tubes, a client-side Drag-and-Drop `.las` / `.dev` / `.segy` Inspector, and live Theorem 2.1–2.7 telemetry with zero Python setup.
 
 ### Option 2: Pre-Built Standalone Binaries (GitHub Actions CI Releases)
 
@@ -142,7 +142,7 @@ pip install -e ".[dev]"
 Export the portable HTML5 Studio, render the 4-panel showcase figure, or start the local interactive Studio server:
 
 ```bash
-oatse export-studio --output-dir results
+oatse export-studio --output-dir studio
 oatse showcase --scenario munk_sofar_shadow_zone --output results/oatse_sonar_showcase.png
 oatse serve --port 8090
 ```

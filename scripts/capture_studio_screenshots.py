@@ -52,13 +52,15 @@ def capture_screenshot(browser_exe: str, url: str, output_png: Path) -> None:
 
 
 def main() -> int:
+    studio_dir = ROOT / "studio"
     results_dir = ROOT / "results"
     docs_dir = ROOT / "docs"
+    studio_dir.mkdir(parents=True, exist_ok=True)
     results_dir.mkdir(parents=True, exist_ok=True)
     docs_dir.mkdir(parents=True, exist_ok=True)
 
     # 1. Export portable HTML studio
-    html_path = export_portable_html_studio(results_dir / "oatse_portable_studio.html")
+    html_path = export_portable_html_studio(studio_dir / "oatse_portable_studio.html")
     print(f"[+] Exported portable HTML studio: {html_path} ({html_path.stat().st_size / 1024:.1f} KB)")
 
     # 2. Render Matplotlib showcase figure
