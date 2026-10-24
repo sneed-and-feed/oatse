@@ -194,6 +194,14 @@ python scripts/audit_gfm_math.py README.md docs/ARCHITECTURE.md
 ### BibTeX Reference Block
 
 ```bibtex
+@software{oatse_2026,
+  author={Cohen, Noah},
+  title={OATSE: Ocean Acoustic Thermocline and Sonar Engine},
+  year={2026},
+  version={0.2.0},
+  url={https://github.com/sneed-and-feed/oatse}
+}
+
 @article{munk1974sound,
   title={Sound channel in an exponentially stratified ocean, with application to {SOFAR}},
   author={Munk, Walter H.},
