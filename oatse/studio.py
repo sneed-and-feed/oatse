@@ -4086,10 +4086,134 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         this.tieBreakGap = 0.285;
         this.radialDrift = 0.0;
         this.w1Dist = 0.024;
+        this.statSamples256 = new Float32Array(256);
+        this.statDevs256 = new Float32Array(256);
+        this.morseHistory = new Float32Array(256);
+        this.isMorseCritical = false;
+        this.simStepCount = 0;
+        this.cascadeRegisters = new Float32Array([0.75, 0.5, -0.35, 0.2, -0.1, 0.08, 0.0, 0.0]);
+        this.ulpBufF32 = new Float32Array(1);
+        this.ulpBufI32 = new Int32Array(this.ulpBufF32.buffer);
       }
     }
 
     const hudArena = new TrackerArena();
+
+    function oatseSumSqF32(v) {
+      let s = Math.fround(0.0);
+      for (let i = 0; i < v.length; i++) {
+        const vi = Math.fround(v[i]);
+        s = Math.fround(s + Math.fround(vi * vi));
+      }
+      return s;
+    }
+
+    function exactSphereNormUlpPolish(v, targetSq = 1.0) {
+      const n = v.length;
+      const tSq = Math.fround(targetSq);
+      if (!(tSq > 0.0) || !Number.isFinite(tSq)) return;
+      let normSq = oatseSumSqF32(v);
+      if (!(normSq > 1e-30)) return;
+      const invNorm = Math.fround(Math.sqrt(tSq) / Math.sqrt(normSq));
+      let maxIdx = 0;
+      let maxAbs = -1.0;
+      for (let i = 0; i < n; i++) {
+        v[i] = Math.fround(v[i] * invNorm);
+        const a = Math.abs(v[i]);
+        if (a > maxAbs) {
+          maxAbs = a;
+          maxIdx = i;
+        }
+      }
+      if (maxAbs > 1e-12) {
+        let otherSq = Math.fround(0.0);
+        for (let i = 0; i < n; i++) {
+          if (i !== maxIdx) {
+            const vi = Math.fround(v[i]);
+            otherSq = Math.fround(otherSq + Math.fround(vi * vi));
+          }
+        }
+        if (otherSq <= tSq) {
+          const sgn = v[maxIdx] >= 0.0 ? 1.0 : -1.0;
+          v[maxIdx] = Math.fround(sgn * Math.sqrt(Math.max(0.0, tSq - otherSq)));
+        }
+      }
+      if (oatseSumSqF32(v) === tSq) return;
+
+      const f32 = hudArena.ulpBufF32;
+      const i32 = hudArena.ulpBufI32;
+      for (let pass = 0; pass < 4; pass++) {
+        let bestErr = Math.abs(oatseSumSqF32(v) - tSq);
+        if (bestErr === 0.0) return;
+        let bestIdx = -1;
+        let bestVal = 0.0;
+        for (let i = 0; i < n; i++) {
+          const orig = v[i];
+          if (Math.abs(orig) <= 1e-12) continue;
+          f32[0] = orig;
+          const bits = i32[0];
+          for (let du = -16; du <= 16; du++) {
+            if (du === 0) continue;
+            i32[0] = (bits + du) | 0;
+            const cand = f32[0];
+            if (!Number.isFinite(cand)) continue;
+            v[i] = cand;
+            const err = Math.abs(oatseSumSqF32(v) - tSq);
+            if (err < bestErr) {
+              bestErr = err;
+              bestIdx = i;
+              bestVal = cand;
+              if (err === 0.0) return;
+            }
+          }
+          v[i] = orig;
+        }
+        if (bestIdx >= 0) v[bestIdx] = bestVal;
+        else break;
+      }
+      if (oatseSumSqF32(v) === tSq) return;
+
+      let bestErr = Math.abs(oatseSumSqF32(v) - tSq);
+      let bestPair = null;
+      for (let i = 0; i < n; i++) {
+        const origI = v[i];
+        if (Math.abs(origI) <= 1e-12) continue;
+        f32[0] = origI;
+        const bitsI = i32[0];
+        for (let j = i + 1; j < n; j++) {
+          const origJ = v[j];
+          if (Math.abs(origJ) <= 1e-12) continue;
+          f32[0] = origJ;
+          const bitsJ = i32[0];
+          for (let duI = -12; duI <= 12; duI++) {
+            i32[0] = (bitsI + duI) | 0;
+            const candI = f32[0];
+            if (!Number.isFinite(candI)) continue;
+            v[i] = candI;
+            for (let duJ = -12; duJ <= 12; duJ++) {
+              if (duI === 0 && duJ === 0) continue;
+              i32[0] = (bitsJ + duJ) | 0;
+              const candJ = f32[0];
+              if (!Number.isFinite(candJ)) continue;
+              v[j] = candJ;
+              const err = Math.abs(oatseSumSqF32(v) - tSq);
+              if (err === 0.0) return;
+              if (err < bestErr) {
+                bestErr = err;
+                bestPair = [i, candI, j, candJ];
+              }
+            }
+          }
+          v[j] = origJ;
+        }
+        v[i] = origI;
+      }
+      if (bestPair) {
+        v[bestPair[0]] = bestPair[1];
+        v[bestPair[2]] = bestPair[3];
+      }
+    }
+    exactSphereNormUlpPolish(hudArena.cascadeRegisters, 1.0);
 
     function mapThermalColor(val255, pal) {
       const t = Math.max(0.0, Math.min(1.0, val255 / 255.0));
@@ -4673,6 +4797,31 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       }
       ctxD.restore();
       drawMilStdHudReticle(ctxD, vw, vh);
+
+      // O(1) 256-sample strided MAD floor (Number.isFinite sanitized) & causal 3-point Morse gate (hIdx + 255) % 256
+      hudArena.simStepCount = (hudArena.simStepCount || 0) + 1;
+      const samples256 = hudArena.statSamples256;
+      const devs256 = hudArena.statDevs256;
+      for (let s = 0; s < 256; s++) {
+        const v = hudArena.curlNorm[(s * 64) % hudArena.size];
+        samples256[s] = Number.isFinite(v) ? v : 0.0;
+      }
+      samples256.sort();
+      const medSal = 0.5 * (samples256[127] + samples256[128]);
+      for (let s = 0; s < 256; s++) devs256[s] = Math.abs(samples256[s] - medSal);
+      devs256.sort();
+      const madSal = Math.max(0.5, 0.5 * (devs256[127] + devs256[128]));
+      hudArena.madFloor = medSal + 5.5 * 1.4826 * madSal;
+
+      const hIdx = hudArena.simStepCount % 256;
+      hudArena.morseHistory[hIdx] = Number.isFinite(hudArena.madFloor) ? hudArena.madFloor : 0.0;
+      const midSample = hudArena.morseHistory[(hIdx + 255) % 256];
+      const prev2Sample = hudArena.morseHistory[(hIdx + 254) % 256];
+      const dMinus = midSample - prev2Sample;
+      const dPlus = midSample - hudArena.morseHistory[hIdx];
+      hudArena.isMorseCritical = hudArena.simStepCount >= 2 && (dMinus * dPlus > 0);
+      exactSphereNormUlpPolish(hudArena.cascadeRegisters, 1.0);
+      hudArena.radialDrift = Math.abs(oatseSumSqF32(hudArena.cascadeRegisters) - 1.0);
 
       // Update overlay stats
       const elSpikes = document.getElementById("stat-spikes");
