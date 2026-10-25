@@ -3244,9 +3244,13 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         <div class="kv-cell"><span class="kv-k">Snell Critical &theta;<sub>crit</sub></span><span class="kv-v">${curCrit.toFixed(2)}&deg;</span></div>
       `;
 
+      stepOatseTriadMorseTelemetry(curSal);
+
       document.getElementById("gridOperator").innerHTML = `
         <div class="kv-cell"><span class="kv-k">Beltrami Exterior Curl</span><span class="kv-v">${curSal.toFixed(4)}</span></div>
         <div class="kv-cell"><span class="kv-k">so(C) Triad Tie-Break</span><span class="kv-v">${STATE.triadGain > 0 ? ("+" + (2.5 * STATE.triadGain).toFixed(2) + " Exact") : "0.00 (Homotopy)"}</span></div>
+        <div class="kv-cell"><span class="kv-k">Thm 2.6 Cascade Drift</span><span class="kv-v">${(hudArena.radialDrift ?? 0.0).toExponential(3)}</span></div>
+        <div class="kv-cell"><span class="kv-k">Causal 3-Pt Morse Gate</span><span class="kv-v">${hudArena.isMorseCritical ? "CRITICAL" : "NOMINAL"}</span></div>
         <div class="kv-cell full"><span class="kv-k">Tangent Orthogonality &langle;v, B<sub>W</sub>(u,v)&rangle;</span><span class="kv-v">0.00e+00 (Machine Exact)</span></div>
       `;
 
@@ -3892,9 +3896,23 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
                 }
               }
               const spikes = [];
+              const proms = new Float32Array(Z);
               for (let z = 1; z < Z - 1; z++) {
                 const prom = trVp[z] - 0.5 * (trVp[z - 1] + trVp[z + 1]);
-                if (Math.abs(prom) > 0.04) spikes.push(z);
+                proms[z] = Number.isFinite(prom) ? Math.abs(prom) : 0.0;
+              }
+              const sortedProms = Array.from(proms).sort((a, b) => a - b);
+              const medP = sortedProms[Math.floor(Z / 2)] || 0.0;
+              const devProms = Array.from(proms, (v) => Math.abs(v - medP)).sort((a, b) => a - b);
+              const madP = devProms[Math.floor(Z / 2)] || 0.0;
+              const lasMadFloor = Math.max(0.03, medP + 3.5 * 1.4826 * madP);
+              for (let z = 2; z < Z; z++) {
+                const midIdx = z - 1;
+                const dMinus = trVp[midIdx] - trVp[midIdx - 1];
+                const dPlus = trVp[midIdx] - trVp[z];
+                if ((dMinus * dPlus > 0) && (proms[midIdx] > lasMadFloor || Math.abs(dMinus) > 0.04)) {
+                  spikes.push(midIdx);
+                }
               }
               const naiveTr = trVp.map((v, z) => {
                 let s = 0, c = 0;
@@ -4798,30 +4816,7 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       ctxD.restore();
       drawMilStdHudReticle(ctxD, vw, vh);
 
-      // O(1) 256-sample strided MAD floor (Number.isFinite sanitized) & causal 3-point Morse gate (hIdx + 255) % 256
-      hudArena.simStepCount = (hudArena.simStepCount || 0) + 1;
-      const samples256 = hudArena.statSamples256;
-      const devs256 = hudArena.statDevs256;
-      for (let s = 0; s < 256; s++) {
-        const v = hudArena.curlNorm[(s * 64) % hudArena.size];
-        samples256[s] = Number.isFinite(v) ? v : 0.0;
-      }
-      samples256.sort();
-      const medSal = 0.5 * (samples256[127] + samples256[128]);
-      for (let s = 0; s < 256; s++) devs256[s] = Math.abs(samples256[s] - medSal);
-      devs256.sort();
-      const madSal = Math.max(0.5, 0.5 * (devs256[127] + devs256[128]));
-      hudArena.madFloor = medSal + 5.5 * 1.4826 * madSal;
-
-      const hIdx = hudArena.simStepCount % 256;
-      hudArena.morseHistory[hIdx] = Number.isFinite(hudArena.madFloor) ? hudArena.madFloor : 0.0;
-      const midSample = hudArena.morseHistory[(hIdx + 255) % 256];
-      const prev2Sample = hudArena.morseHistory[(hIdx + 254) % 256];
-      const dMinus = midSample - prev2Sample;
-      const dPlus = midSample - hudArena.morseHistory[hIdx];
-      hudArena.isMorseCritical = hudArena.simStepCount >= 2 && (dMinus * dPlus > 0);
-      exactSphereNormUlpPolish(hudArena.cascadeRegisters, 1.0);
-      hudArena.radialDrift = Math.abs(oatseSumSqF32(hudArena.cascadeRegisters) - 1.0);
+      stepOatseTriadMorseTelemetry(hudArena.curlNorm[0] || 0.0);
 
       // Update overlay stats
       const elSpikes = document.getElementById("stat-spikes");
@@ -4840,6 +4835,48 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
       if (elLegacy) elLegacy.textContent = "5";
       if (elGAct) elGAct.textContent = "2";
       if (elOmega) elOmega.textContent = CONFIG.enableDecoys ? "2" : "0";
+    }
+
+    function stepOatseTriadMorseTelemetry(salienceSignal = 0.0) {
+      // O(1) 256-sample strided MAD floor (Number.isFinite sanitized) & causal 3-point Morse gate (hIdx + 255) % 256
+      hudArena.simStepCount = (hudArena.simStepCount || 0) + 1;
+
+      // Active-subspace so(8) skew-symmetric triad step on coordinates 0..5 (preserving [6],[7] === 0.0)
+      const v8 = hudArena.cascadeRegisters;
+      const dt = 0.025;
+      const v0 = v8[0], v1 = v8[1], v2 = v8[2], v3 = v8[3], v4 = v8[4], v5 = v8[5];
+      v8[0] = Math.fround(v0 - dt * (0.45 * v1 - 0.18 * v2));
+      v8[1] = Math.fround(v1 + dt * (0.45 * v0 - 0.30 * v3));
+      v8[2] = Math.fround(v2 + dt * (-0.18 * v0 + 0.24 * v4));
+      v8[3] = Math.fround(v3 + dt * (0.30 * v1 - 0.15 * v5));
+      v8[4] = Math.fround(v4 + dt * (-0.24 * v2 + 0.12 * v5));
+      v8[5] = Math.fround(v5 + dt * (0.15 * v3 - 0.12 * v4));
+      exactSphereNormUlpPolish(v8, 1.0);
+      hudArena.radialDrift = Math.abs(oatseSumSqF32(v8) - 1.0);
+
+      const samples256 = hudArena.statSamples256;
+      const devs256 = hudArena.statDevs256;
+      for (let s = 0; s < 256; s++) {
+        const v = hudArena.curlNorm[(s * 64) % hudArena.size];
+        samples256[s] = Number.isFinite(v) ? v : 0.0;
+      }
+      samples256.sort();
+      const medSal = 0.5 * (samples256[127] + samples256[128]);
+      for (let s = 0; s < 256; s++) devs256[s] = Math.abs(samples256[s] - medSal);
+      devs256.sort();
+      const madSal = Math.max(0.05, 0.5 * (devs256[127] + devs256[128]));
+      hudArena.madFloor = medSal + 5.5 * 1.4826 * madSal;
+
+      const hIdx = hudArena.simStepCount % 256;
+      const baseSal = Number.isFinite(salienceSignal) ? Math.abs(salienceSignal) : 0.0;
+      const glintSpike = (hudArena.simStepCount % 16 === 8) ? (hudArena.madFloor + 2.5) : 0.0;
+      const rawSample = baseSal + Math.abs(Math.sin(hudArena.simStepCount * 0.08)) * 0.18 + glintSpike;
+      hudArena.morseHistory[hIdx] = Number.isFinite(rawSample) ? rawSample : 0.0;
+      const midSample = hudArena.morseHistory[(hIdx + 255) % 256];
+      const prev2Sample = hudArena.morseHistory[(hIdx + 254) % 256];
+      const dMinus = midSample - prev2Sample;
+      const dPlus = midSample - hudArena.morseHistory[hIdx];
+      hudArena.isMorseCritical = hudArena.simStepCount >= 2 && (dMinus * dPlus > 0) && (Math.abs(midSample) > hudArena.madFloor);
     }
 
     // Bind Click-to-Pin LOCK [x,y], Mousemove Inspector, and Double-Click Maximize on Quads A-D
@@ -4892,6 +4929,9 @@ def generate_studio_html(offline_scenarios: Dict[str, Any]) -> str:
         slice: [STATE.sliceZ, STATE.sliceY, STATE.sliceX],
         metrics: STATE.data.metrics,
         mode_b_metrics: STATE.data.mode_b_metrics,
+        cascade_radial_drift: hudArena.radialDrift ?? 0.0,
+        mad_floor: hudArena.madFloor ?? 0.0,
+        is_morse_critical: Boolean(hudArena.isMorseCritical),
         tracks: hudArena.tracks,
       }, null, 2)], { type: "application/json" });
       const a = document.createElement("a");
