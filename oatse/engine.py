@@ -179,7 +179,8 @@ def _exact_sphere_norm_ulp_polish(v_retracted: torch.Tensor, target_norm_sq: tor
             rem_t = sub_t[rem_mask]
             rem_err = sub_err[rem_mask]
             rem_inf = torch.full_like(rem_t, float("inf"))
-            for s_mul in (1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6, 8, -8, 12, -12, 16, -16):
+            for s_idx in range(1, 256):
+                s_mul = (s_idx // 2) if (s_idx % 2 == 0) else -((s_idx + 1) // 2)
                 if not bool((rem_err != 0.0).any().item()):
                     break
                 w = rem_v * (1.0 + float(s_mul) * 1e-5)
@@ -1193,7 +1194,9 @@ class OATSEModel(nn.Module):
         - Thm 2.7: SO(6) rotor trace and Frobenius norm conservation <= 1.14e-13 residual.
         """
         device = self.vp_lut.device
-        W = torch.randn(self.M_ocean, self.C, self.C, device=device, dtype=torch.float32)
+        gen = torch.Generator(device=device)
+        gen.manual_seed(20260419)
+        W = torch.randn(self.M_ocean, self.C, self.C, generator=gen, device=device, dtype=torch.float32)
         S = W - W.transpose(-1, -2)
 
         # Theorem 2.1: Antisymmetry & zero self-interaction in so(C)
@@ -1241,9 +1244,9 @@ class OATSEModel(nn.Module):
         )
 
         # Theorem 2.6: Multi-step spherical cascade invariance across K in {1, 4, 8, 16}
-        W_rec = 0.25 * torch.randn(self.C, self.C, self.C, device=device)
-        u_cas = torch.randn(128, self.C, device=device)
-        v_cas = torch.randn(128, self.C, device=device)
+        W_rec = 0.25 * torch.randn(self.C, self.C, self.C, generator=gen, device=device)
+        u_cas = torch.randn(128, self.C, generator=gen, device=device)
+        v_cas = torch.randn(128, self.C, generator=gen, device=device)
         max_cas_drift = 0.0
         max_cas_ortho = 0.0
         for K in (1, 4, 8, 16):
