@@ -57,8 +57,11 @@ def main() -> int:
     out_dir = ROOT / "results"
     out_dir.mkdir(parents=True, exist_ok=True)
 
+    now_utc = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
+
     summary: Dict[str, Any] = {
         "engine": "OATSE (Ocean Acoustic Thermocline & Sonar Engine) v0.2.0",
+        "timestamp_utc": now_utc,
         "license": "CC0-1.0 Universal Public Domain Dedication",
         "snr_db": 20.0,
         "grid_shape": [32, 24, 24],
@@ -210,6 +213,7 @@ def main() -> int:
     print("REFEREE AUDIT SUITE (OBSERVATION SNR SWEEP, FRONT JITTER MISPICK & BELTRAMI ABLATION)")
     print("=" * 135)
     audit_res = run_referee_audit_suite(grid_shape=(32, 24, 24))
+    audit_res["timestamp_utc"] = now_utc
     summary["referee_audit_suite"] = audit_res
 
     print(f"[Referee Audit Peak Heap RAM] {audit_res['peak_heap_mb']:.2f} MB (< 35.0 MB limit)")

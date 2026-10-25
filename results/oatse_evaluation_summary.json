@@ -1,5 +1,6 @@
 {
   "engine": "OATSE (Ocean Acoustic Thermocline & Sonar Engine) v0.2.0",
+  "timestamp_utc": "2026-10-25T21:59:33Z",
   "license": "CC0-1.0 Universal Public Domain Dedication",
   "snr_db": 20.0,
   "grid_shape": [
@@ -314,7 +315,7 @@
     }
   },
   "referee_audit_suite": {
-    "peak_heap_mb": 0.735,
+    "peak_heap_mb": 0.734,
     "blind_scenarios_snr20db": {
       "munk_sofar_shadow_zone": {
         "scenario_name": "munk_sofar_shadow_zone",
@@ -773,6 +774,7 @@
         },
         "wkb_thorp_verified": true
       }
-    }
+    },
+    "timestamp_utc": "2026-10-25T21:59:33Z"
   }
 }

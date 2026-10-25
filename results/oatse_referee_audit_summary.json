@@ -1,5 +1,5 @@
 {
-  "peak_heap_mb": 0.735,
+  "peak_heap_mb": 0.734,
   "blind_scenarios_snr20db": {
     "munk_sofar_shadow_zone": {
       "scenario_name": "munk_sofar_shadow_zone",
@@ -458,5 +458,6 @@
       },
       "wkb_thorp_verified": true
     }
-  }
+  },
+  "timestamp_utc": "2026-10-25T21:59:33Z"
 }
