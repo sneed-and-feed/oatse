@@ -30,6 +30,8 @@ from oatse.engine import (
     build_kelvin_mandel_so6_rotor,
     build_so3_from_dip_azimuth,
     build_vti_kelvin_stiffness_tensor,
+    tropical_kleene_closure,
+    tropical_min_plus_matmul,
 )
 from oatse.studio import (
     export_portable_html_studio,
@@ -58,6 +60,8 @@ __all__ = [
     "build_kelvin_mandel_so6_rotor",
     "build_so3_from_dip_azimuth",
     "build_vti_kelvin_stiffness_tensor",
+    "tropical_kleene_closure",
+    "tropical_min_plus_matmul",
     "export_portable_html_studio",
     "export_portable_studio_html",
     "generate_studio_html",

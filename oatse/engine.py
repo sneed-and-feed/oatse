@@ -1476,3 +1476,151 @@ class OATSEModel(nn.Module):
         sal, _, _ = self.cast_shell.compute_beltrami_salience(profile_trace)
         return sal
 
+
+# ============================================================================
+# 9. Tropical Min-Plus Semiring Algebra (R u {+inf}, min, +) & Kleene Closure
+# ============================================================================
+
+
+def tropical_min_plus_matmul(
+    A: Union[np.ndarray, torch.Tensor],
+    B: Union[np.ndarray, torch.Tensor],
+    return_witness: bool = False,
+    inf_threshold: float = 1e12,
+) -> Any:
+    """
+    Matrix multiplication over the tropical min-plus semiring T = (R u {+inf}, (+)=min, (x)=+):
+        (A (x)_T B)_{ij} = min_k (A_{ik} + B_{kj}).
+
+    Supports both 2D `np.ndarray` and `torch.Tensor` inputs. When `return_witness=True`,
+    returns `(C, witness_k)` where `witness_k[i, j] = argmin_k (A_{ik} + B_{kj})` (or `-1` if `>= inf_threshold`).
+    """
+    if isinstance(A, torch.Tensor) or isinstance(B, torch.Tensor):
+        tA = A if isinstance(A, torch.Tensor) else torch.as_tensor(A, dtype=torch.float64)
+        tB = B if isinstance(B, torch.Tensor) else torch.as_tensor(B, dtype=tA.dtype, device=tA.device)
+        if tA.ndim != 2 or tB.ndim != 2 or tA.shape[1] != tB.shape[0]:
+            raise ValueError(
+                f"tropical_min_plus_matmul requires compatible 2D shapes, got {tuple(tA.shape)} and {tuple(tB.shape)}"
+            )
+        orig_dtype = tA.dtype
+        if tA.shape[1] == 0:
+            empty_c = torch.full((tA.shape[0], tB.shape[1]), float("inf"), dtype=orig_dtype, device=tA.device)
+            empty_w = torch.full((tA.shape[0], tB.shape[1]), -1, dtype=torch.long, device=tA.device)
+            return (empty_c, empty_w) if return_witness else empty_c
+        a64 = torch.where(tA.to(torch.float64) >= inf_threshold, float("inf"), tA.to(torch.float64))
+        b64 = torch.where(tB.to(torch.float64) >= inf_threshold, float("inf"), tB.to(torch.float64))
+        sums = a64.unsqueeze(-1) + b64.unsqueeze(-3)
+        min_vals, min_idx = torch.min(sums, dim=-2)
+        valid = torch.isfinite(min_vals) & (min_vals < inf_threshold)
+        min_idx = torch.where(valid, min_idx, torch.full_like(min_idx, -1))
+        out = torch.where(valid, min_vals, torch.full_like(min_vals, float("inf"))).to(orig_dtype)
+        return (out, min_idx) if return_witness else out
+
+    arr_a = np.asarray(A, dtype=np.float64)
+    arr_b = np.asarray(B, dtype=np.float64)
+    if arr_a.ndim != 2 or arr_b.ndim != 2 or arr_a.shape[1] != arr_b.shape[0]:
+        raise ValueError(
+            f"tropical_min_plus_matmul requires compatible 2D shapes, got {arr_a.shape} and {arr_b.shape}"
+        )
+    if arr_a.shape[1] == 0:
+        empty_c = np.full((arr_a.shape[0], arr_b.shape[1]), np.inf, dtype=np.float64)
+        empty_w = np.full((arr_a.shape[0], arr_b.shape[1]), -1, dtype=np.int64)
+        return (empty_c, empty_w) if return_witness else empty_c
+
+    a_clean = np.where(arr_a >= inf_threshold, np.inf, arr_a)
+    b_clean = np.where(arr_b >= inf_threshold, np.inf, arr_b)
+    sums = a_clean[:, :, None] + b_clean[None, :, :]
+    min_idx = np.argmin(sums, axis=1)
+    i_grid, j_grid = np.ogrid[: arr_a.shape[0], : arr_b.shape[1]]
+    min_vals = sums[i_grid, min_idx, j_grid]
+    valid = np.isfinite(min_vals) & (min_vals < inf_threshold)
+    min_idx = np.where(valid, min_idx, -1).astype(np.int64)
+    min_vals = np.where(valid, min_vals, np.inf)
+    return (min_vals, min_idx) if return_witness else min_vals
+
+
+def tropical_kleene_closure(
+    A: Union[np.ndarray, torch.Tensor],
+    max_steps: Optional[int] = None,
+    return_routing: bool = False,
+    inf_threshold: float = 1e12,
+) -> Any:
+    """
+    Computes the tropical min-plus Kleene star closure over finite-state transitions:
+        A^* = I_T (+) A (+) A^(x 2) (+) ... (+) A^(x m)
+    where `(I_T)_{ii} = 0` and `(I_T)_{ij} = +inf` (`i != j`), yielding exact minimum-cost
+    transition chains across up to `max_steps` hops via vectorized tropical squaring / min-plus products.
+
+    When `return_routing=True`, returns `(A_star, next_hop)` where `next_hop[i, j]` is the
+    first step `k` along the optimal tropical geodesic `i -> k ->* j` (or `-1` if `i == j` or unreachable).
+    """
+    is_tensor = isinstance(A, torch.Tensor)
+    if is_tensor:
+        orig_device = A.device
+        orig_dtype = A.dtype
+        W_raw = A.detach().cpu().numpy().astype(np.float64)
+    else:
+        W_raw = np.asarray(A, dtype=np.float64)
+
+    if W_raw.ndim != 2 or W_raw.shape[0] != W_raw.shape[1]:
+        raise ValueError(f"tropical_kleene_closure requires a square 2D matrix, got {W_raw.shape}")
+
+    n = int(W_raw.shape[0])
+    if n == 0:
+        empty_star = np.zeros((0, 0), dtype=np.float64)
+        empty_hop = np.zeros((0, 0), dtype=np.int64)
+        if is_tensor:
+            t_star = torch.as_tensor(empty_star, dtype=orig_dtype, device=orig_device)
+            t_hop = torch.as_tensor(empty_hop, dtype=torch.long, device=orig_device)
+            return (t_star, t_hop) if return_routing else t_star
+        return (empty_star, empty_hop) if return_routing else empty_star
+
+    steps = max(1, int(max_steps) if max_steps is not None else max(1, n - 1))
+    W = np.where(W_raw >= inf_threshold, np.inf, W_raw)
+    star = np.minimum(W, np.inf)
+    np.fill_diagonal(star, 0.0)
+    next_hop = np.full((n, n), -1, dtype=np.int64)
+
+    off_diag = ~np.eye(n, dtype=bool)
+    valid_1hop = off_diag & np.isfinite(W) & (W < inf_threshold)
+    j_idx = np.broadcast_to(np.arange(n, dtype=np.int64)[None, :], (n, n))
+    next_hop = np.where(valid_1hop, j_idx, next_hop)
+    star = np.where(off_diag, np.where(valid_1hop, W, np.inf), 0.0)
+
+    if steps >= max(1, n - 1) and n > 1:
+        # Vectorized repeated tropical squaring: D^{(2^m)} = D^{(2^{m-1})} (x)_T D^{(2^{m-1})}
+        num_iters = max(1, int(math.ceil(math.log2(max(1, n - 1)))))
+        for _ in range(num_iters):
+            d_new, mid_k = tropical_min_plus_matmul(
+                star, star, return_witness=True, inf_threshold=inf_threshold
+            )
+            improved = off_diag & (d_new + 1e-12 < star)
+            if not np.any(improved):
+                break
+            if return_routing:
+                safe_k = np.maximum(0, mid_k)
+                first_hop = np.take_along_axis(next_hop, safe_k, axis=1)
+                next_hop = np.where(improved, first_hop, next_hop)
+            star = np.where(improved, d_new, star)
+    elif steps > 1 and n > 1:
+        # Exact bounded-hop vectorized Bellman-Ford up to `steps` hops
+        w_off = np.where(off_diag, W, np.inf)
+        power = w_off.copy()
+        for _ in range(2, steps + 1):
+            next_power, mid_k = tropical_min_plus_matmul(
+                w_off, power, return_witness=True, inf_threshold=inf_threshold
+            )
+            improved = off_diag & (next_power + 1e-12 < star)
+            if return_routing and np.any(improved):
+                next_hop = np.where(improved, mid_k, next_hop)
+            star = np.where(improved, next_power, star)
+            power = next_power
+
+    if is_tensor:
+        t_star = torch.as_tensor(star, dtype=orig_dtype, device=orig_device)
+        t_hop = torch.as_tensor(next_hop, dtype=torch.long, device=orig_device)
+        return (t_star, t_hop) if return_routing else t_star
+    return (star, next_hop) if return_routing else star
+
+
+

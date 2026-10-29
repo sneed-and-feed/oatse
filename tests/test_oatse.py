@@ -681,4 +681,52 @@ def test_suite20_flask_studio_server_endpoints():
     assert r_up.get_json()["status"] == "ok"
 
 
+def test_suite21_tropical_min_plus_semiring_and_kleene_closure() -> None:
+    """Verify tropical min-plus matrix multiplication and Kleene star closure (NumPy & PyTorch)."""
+    from oatse import tropical_kleene_closure, tropical_min_plus_matmul
+
+    inf = float("inf")
+    W_np = np.array(
+        [
+            [0.0, 4.0, inf, 15.0],
+            [inf, 0.0, 2.0, inf],
+            [inf, inf, 0.0, 3.0],
+            [inf, inf, inf, 0.0],
+        ],
+        dtype=np.float32,
+    )
+    W2_np, wit_np = tropical_min_plus_matmul(W_np, W_np, return_witness=True)
+    assert float(W2_np[0, 2]) == pytest.approx(6.0)
+    assert int(wit_np[0, 2]) == 1
+
+    D_np, route_np = tropical_kleene_closure(W_np, return_routing=True)
+    assert float(D_np[0, 3]) == pytest.approx(9.0)  # 0 -> 1 (4) -> 2 (2) -> 3 (3) = 9 < 15
+    assert int(route_np[0, 3]) == 1
+    assert int(route_np[1, 3]) == 2
+    assert int(route_np[2, 3]) == 3
+
+    W_t = torch.tensor(W_np, dtype=torch.float32)
+    D_t, route_t = tropical_kleene_closure(W_t, return_routing=True)
+    assert torch.allclose(D_t, torch.tensor(D_np, dtype=torch.float32))
+    assert int(route_t[0, 3].item()) == 1
+    assert int(route_t[1, 3].item()) == 2
+    assert int(route_t[3, 0].item()) == -1  # Unreachable must be -1
+
+    # Sentinel inf_threshold=1e12 unreachable routing & empty-dimension edge cases
+    W_sent = np.full((3, 3), 1e12, dtype=np.float64)
+    np.fill_diagonal(W_sent, 0.0)
+    W_sent[0, 1] = 2.5
+    D_sent, r_sent = tropical_kleene_closure(W_sent, return_routing=True, inf_threshold=1e12)
+    assert float(D_sent[0, 1]) == pytest.approx(2.5)
+    assert int(r_sent[0, 1]) == 1
+    assert int(r_sent[0, 2]) == -1
+    assert int(r_sent[0, 0]) == -1
+
+    empty_c, empty_w = tropical_min_plus_matmul(
+        torch.zeros((2, 0), dtype=torch.float32),
+        torch.zeros((0, 2), dtype=torch.float32),
+        return_witness=True,
+    )
+    assert empty_c.shape == (2, 2) and bool(torch.all(torch.isinf(empty_c)))
+    assert empty_w.shape == (2, 2) and bool(torch.all(empty_w == -1))
 
