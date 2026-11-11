@@ -2,7 +2,7 @@
 
 [![License: CC0-1.0](https://img.shields.io/badge/License-CC0_1.0-lightgrey.svg)](LICENSE)
 [![Lean 4 Checked](https://img.shields.io/badge/Lean_4-Formalized-blue.svg)](formalization/OcclusionTriad.lean)
-[![SWaP-C](https://img.shields.io/badge/SWaP--C-%3C_35_MB_SRAM-brightgreen.svg)](#)
+[![SWaP-C](https://img.shields.io/badge/SWaP--C-%3C_35_MB_SRAM-brightgreen.svg)](docs/ARCHITECTURE.md)
 
 > **Live 3D WebGL Sonar Studio (Zero-Install Browser Demo):**
 > - **[Launch Interactive 3D Studio (CDN)](https://rawcdn.githack.com/sneed-and-feed/oatse/main/studio/oatse_portable_studio.html)** | **[Stylo 4-Quad Tactical HUD (`?view=quad`)](https://rawcdn.githack.com/sneed-and-feed/oatse/main/studio/oatse_portable_studio.html?view=quad)** | **[Fused HUD (`?view=fused`)](https://rawcdn.githack.com/sneed-and-feed/oatse/main/studio/oatse_portable_studio.html?view=fused)**
